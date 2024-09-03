@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -5,6 +6,8 @@ from sqlalchemy.orm import Session
 
 from DB import crud, models, schemas
 from DB.database import SessionLocal, engine
+
+from AI.crud import add_text
 
 # 데이터베이스 테이블 생성하기
 models.Base.metadata.create_all(bind=engine)
@@ -58,7 +61,28 @@ def update_user(userid: str, user_update: schemas.UserTableUpdate, db: Session =
 # AI 생성
 @app.post("/ai/", response_model=schemas.AITableOut)
 def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
-    return crud.create_ai(db=db, ai=ai)
+    # AI 콘텐츠를 추가하는 로직
+    add_text([ai.contents], [{"source" : ""}], [ai.name + "tx"])
+
+    aiDB = schemas.AITableBase(
+        id=ai.id,  # AI 객체의 고유 식별자
+        name=ai.name,  # 이름 필드, None이 기본값
+        category=ai.category,  # 카테고리 필드, None이 기본값
+        introductions=ai.introductions  # 소개 필드, None이 기본값
+    )
+
+# AI 테이블에 새로운 항목 생성
+    created_ai = crud.create_ai(db=db, ai=aiDB)
+    
+    # AILog 테이블에 로그 기록
+    ailog = schemas.AILogTableCreate(
+        aiid=ai.id,
+        log=ai.logs,
+        txurl="create",
+    )
+    crud.create_ailog(db=db, ailog=ailog)
+    
+    return created_ai
 
 @app.get("/ai/top10/", response_model=schemas.AITableListOut)
 def read_top_10_ais(db: Session = Depends(get_db)):
@@ -76,9 +100,31 @@ def read_ai(ai_id: str, db: Session = Depends(get_db)):
 # AI 정보 업데이트
 @app.put("/ai/{ai_id}", response_model=schemas.AITableOut)
 def update_ai(ai_id: str, ai_update: schemas.AITableUserUpdate, db: Session = Depends(get_db)):
-    updated_ai = crud.update_ai(db=db, ai_id=ai_id, ai_update=ai_update)
+    # AI 콘텐츠가 변경된 경우 add_text 호출
+    if ai_update.contents != "":
+        add_text([ai_update.contents], [{"source" : ai_update.name}], [ai_update.name + "UPDATE"])
+    
+    aiUpdateDB = schemas.AITableBase(
+        id=ai_id,  # AI 객체의 고유 식별자
+        name=ai_update.name,  # 이름 필드, None이 기본값
+        category=ai_update.category,  # 카테고리 필드, None이 기본값
+        introductions=ai_update.introductions  # 소개 필드, None이 기본값
+    )
+
+    # AI 정보를 업데이트
+    updated_ai = crud.update_ai(db=db, ai_id=ai_id, ai_update=aiUpdateDB)
     if not updated_ai:
         raise HTTPException(status_code=404, detail="AI not found")
+    
+    # AILog 테이블에 로그 기록
+    ailog = schemas.AILogTableCreate(
+        aiid=ai_id,
+        log=ai_update.logs,
+        txurl="create",
+    )
+
+    crud.create_ailog(db=db, ailog=ailog)
+    
     return updated_ai
 
 # AI 삭제
@@ -89,12 +135,7 @@ def delete_ai(ai_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="AI not found")
     return deleted_ai
 
-# AI 로그 생성
-@app.post("/ailogs/", response_model=schemas.AILogTableOut)
-def create_ailog(ailog: schemas.AILogTableCreate, db: Session = Depends(get_db)):
-    return crud.create_ailog(db=db, ailog=ailog)
-
-# 특정 AI 로그 읽기
+# 특정 AI의 특정 로그 읽기
 @app.get("/ailogs/{log_id}", response_model=schemas.AILogTableOut)
 def read_ailog(log_id: str, db: Session = Depends(get_db)):
     db_ailog = crud.get_ailog(db, log_id=log_id)
@@ -102,6 +143,7 @@ def read_ailog(log_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Log not found")
     return db_ailog
 
+#특정 AI 로그 목록 보기
 @app.get("/ailogs/ai/{ai_id}", response_model=schemas.AILogTableListOut)
 def read_ailog_by_aiid(ai_id: str, db: Session = Depends(get_db)):
     db_ailogs = crud.get_ailogs_by_aiid(db, ai_id=ai_id)
@@ -130,10 +172,10 @@ def read_ailog_by_aiid(ai_id: str, db: Session = Depends(get_db)):
 def create_chat(chat: schemas.ChatTableCreate, db: Session = Depends(get_db)):
     return crud.create_chat(db=db, chat=chat)
 
-# 특정 채팅 읽기
-@app.get("/chats/{chat_id}", response_model=schemas.ChatTableOut)
-def read_chat(chat_id: str, db: Session = Depends(get_db)):
-    db_chat = crud.get_chat(db, chat_id=chat_id)
+# 유저 채팅 목록 읽기
+@app.get("/chats/{userid}", response_model=schemas.ChatTableOut)
+def read_chat(userid: str, db: Session = Depends(get_db)):
+    db_chat = crud.get_chat(db, user_id=userid)
     if not db_chat:
         raise HTTPException(status_code=404, detail="Chat not found")
     return db_chat

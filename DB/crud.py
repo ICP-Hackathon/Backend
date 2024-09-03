@@ -91,8 +91,8 @@ def delete_ailog(db: Session, log_id: str):
     return db_ailog
 
 # ChatTable CRUD functions
-def get_chat(db: Session, chat_id: str):
-    return db.query(models.ChatTable).filter(models.ChatTable.chatid == chat_id).first()
+def get_chat(db: Session, userid: str):
+    return db.query(models.ChatTable).filter(models.ChatTable.userid == userid).first()
 
 def create_chat(db: Session, chat: schemas.ChatTableCreate):
     db_chat = models.ChatTable(**chat.model_dump())

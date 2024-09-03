@@ -38,11 +38,15 @@ class AITableCreate(BaseModel):
     name: Optional[str] = None
     category: Optional[str] = None
     introductions: Optional[str] = None
+    contents: Optional[str] = None
+    logs: Optional[str] = None
 
 class AITableUserUpdate(BaseModel):
     name: Optional[str] = None
     category: Optional[str] = None
     introductions: Optional[str] = None
+    contents: Optional[str] = None
+    logs: Optional[str] = None
 
 class AITableInDB(AITableBase):
     pass
@@ -66,7 +70,6 @@ class AILogTableBase(BaseModel):
 
 class AILogTableCreate(BaseModel):
     aiid: Optional[str] = None
-    createdat: Optional[time] = None
     log: Optional[str] = None
     txurl: Optional[str] = None
 

@@ -1,4 +1,4 @@
-from db import faiss
+from AI.db import faiss
 
 # 데이터베이스에 새 텍스트를 추가하는 함수
 def add_text(texts, metadatas, ids):
