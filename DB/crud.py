@@ -32,6 +32,10 @@ def delete_user(db: Session, userid: str):
 def get_ai(db: Session, ai_id: str):
     return db.query(models.AITable).filter(models.AITable.id == ai_id).first()
 
+# AITable CRUD functions
+def get_top_10_ai_by_usage(db: Session):
+    return db.query(models.AITable).order_by(models.AITable.usage.desc()).limit(10).all()
+
 def create_ai(db: Session, ai: schemas.AITableCreate):
     db_ai = models.AITable(**ai.model_dump())
     db.add(db_ai)

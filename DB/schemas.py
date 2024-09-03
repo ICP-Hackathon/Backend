@@ -27,9 +27,11 @@ class AITableBase(BaseModel):
     name: Optional[str] = None
     category: Optional[str] = None
     introductions: Optional[str] = None
-    usage: Optional[int] = None
-    total_usage: Optional[int] = None
-    ratio: Optional[int] = None
+    usage: Optional[int] = 0
+    total_usage: Optional[int] = 0
+    ratio: Optional[int] = 0
+    class Config:
+        from_attributes = True
 
 class AITableCreate(BaseModel):
     id: str
@@ -47,6 +49,12 @@ class AITableInDB(AITableBase):
 
 class AITableOut(AITableInDB):
     pass
+
+class AITableListOut(BaseModel):
+    ais: List[AITableBase]
+
+    class Config:
+        from_attributes = True
 
 # AILogTable 스키마
 class AILogTableBase(BaseModel):

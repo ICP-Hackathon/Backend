@@ -60,6 +60,11 @@ def update_user(userid: str, user_update: schemas.UserTableUpdate, db: Session =
 def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     return crud.create_ai(db=db, ai=ai)
 
+@app.get("/ai/top10/", response_model=schemas.AITableListOut)
+def read_top_10_ais(db: Session = Depends(get_db)):
+    ais = db.query(models.AITable).order_by(models.AITable.usage.desc()).limit(10).all()
+    return schemas.AITableListOut(ais=ais)
+
 # 특정 AI 읽기
 @app.get("/ai/{ai_id}", response_model=schemas.AITableOut)
 def read_ai(ai_id: str, db: Session = Depends(get_db)):

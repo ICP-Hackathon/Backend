@@ -15,9 +15,9 @@ class AITable(Base):
     name = Column(String, nullable=True)
     category = Column(String, nullable=True)
     introductions = Column(String, nullable=True)
-    usage = Column(Integer, nullable=True)
-    total_usage = Column(Integer, nullable=True)
-    ratio = Column(Integer, nullable=True)
+    usage = Column(Integer, nullable=True, default=0)
+    total_usage = Column(Integer, nullable=True, default = 0)
+    ratio = Column(Integer, nullable=True, default = 0)
 
 class AILogTable(Base):
     __tablename__ = "ailogtable"
