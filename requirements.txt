@@ -1,2 +1,7 @@
 fastapi[all]
 sqlalchemy
+langchain_community
+langchain_openai
+dotenv
+langchain_openai
+langchain.prompts
