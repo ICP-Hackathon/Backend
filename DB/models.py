@@ -1,27 +1,45 @@
-from sqlalchemy import Column, Integer, String, DateTime, Sequence, Date
+from sqlalchemy import Column, Integer, String, Time, Text, func
 from DB.database import Base
-from datetime import datetime
 
-# Base를 상속 받아 SQLAlchemy model 생성
-class Profile(Base):
-    __tablename__ = "profiles"
+class UserTable(Base):
+    __tablename__ = "usertable"
 
-    user_name = Column(String, nullable=False, name="user", primary_key=True)
+    userid = Column(String, nullable=False, primary_key=True)
     name = Column(String, nullable=True)
-    sex = Column(String, nullable=True)
-    birth = Column(Date, nullable=True)
-    mbti = Column(String, nullable=True)
-    keywords = Column(String, nullable=True)
-    contents = Column(String, nullable=True)
+    profileimage = Column(String, nullable=True)
 
-class DiaryModel(Base):
-    __tablename__ = "diary"
+class AITable(Base):
+    __tablename__ = "aitable"
 
-    id = Column(Integer, Sequence('diary_id_seq'), primary_key=True, index=True)
-    date = Column(DateTime, nullable=True, default=datetime.utcnow)  # timestamp 타입의 date 필드, 기본값은 현재 시간
-    keywords = Column(String, nullable=True)
-    contents = Column(String, nullable=True)
-    happy = Column(Integer, nullable=True)
-    sad = Column(Integer, nullable=True)
-    love = Column(Integer, nullable=True)
-    user_name = Column(String, nullable=False, name="user")
+    id = Column(String, nullable=False, primary_key=True)
+    name = Column(String, nullable=True)
+    category = Column(String, nullable=True)
+    introductions = Column(String, nullable=True)
+    usage = Column(Integer, nullable=True)
+    total_usage = Column(Integer, nullable=True)
+    ratio = Column(Integer, nullable=True)
+
+class AILogTable(Base):
+    __tablename__ = "ailogtable"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    aiid = Column(String, nullable=True)
+    createdat = Column(Time, nullable=True, default=func.current_timestamp())
+    log = Column(Text, nullable=True)
+    txurl = Column(String, nullable=True)
+
+class ChatTable(Base):
+    __tablename__ = "chattable"
+
+    chatid = Column(String, nullable=False, primary_key=True)
+    aiid = Column(String, nullable=True)
+    userid = Column(String, nullable=True)
+
+class ChatContentsTable(Base):
+    __tablename__ = "chatcontentstable"
+
+    chatcontentsid = Column(String, nullable=False, primary_key=True)
+    chatid = Column(String, nullable=True)
+    createdat = Column(Time, nullable=True, default=func.current_timestamp())
+    senderid = Column(String, nullable=True)
+    message = Column(Text, nullable=True)
