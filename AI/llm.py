@@ -9,7 +9,8 @@ load_dotenv()
 
 embeddings = OpenAIEmbeddings()
 
-template = """You are a helpful assistant that is an expert at extracting the most useful information from a given text. Also bring in extra relevant information to the user query from outside the given context.
+template = """You are a helpful assistant that is an expert at extracting the most useful information from a given text.
+ Also bring in extra relevant information to the user query from outside the given context.
 Context: {context}
 
 Question: {question}

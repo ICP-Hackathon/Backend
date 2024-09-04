@@ -29,8 +29,8 @@ def delete_user(db: Session, userid: str):
     return db_user
 
 # AITable CRUD functions
-def get_ai(db: Session, ai_id: str):
-    return db.query(models.AITable).filter(models.AITable.id == ai_id).first()
+def get_ai(db: Session, aiid: str):
+    return db.query(models.AITable).filter(models.AITable.id == aiid).first()
 
 # AITable CRUD functions
 def get_top_10_ai_by_usage(db: Session):
@@ -43,8 +43,8 @@ def create_ai(db: Session, ai: schemas.AITableCreate):
     db.refresh(db_ai)
     return db_ai
 
-def update_ai(db: Session, ai_id: str, ai_update: schemas.AITableUserUpdate):
-    db_ai = get_ai(db, ai_id)
+def update_ai(db: Session, aiid: str, ai_update: schemas.AITableUserUpdate):
+    db_ai = get_ai(db, aiid)
     if db_ai:
         for key, value in ai_update.model_dump(exclude_unset=True).items():
             setattr(db_ai, key, value)
@@ -64,8 +64,8 @@ def get_ailog(db: Session, log_id: str):
     return db.query(models.AILogTable).filter(models.AILogTable.id == log_id).first()
 
 # AILogTable CRUD functions
-def get_ailogs_by_aiid(db: Session, ai_id: str):
-    return db.query(models.AILogTable).filter(models.AILogTable.aiid == ai_id).all()
+def get_ailogs_by_aiid(db: Session, aiid: str):
+    return db.query(models.AILogTable).filter(models.AILogTable.aiid == aiid).all()
 
 def create_ailog(db: Session, ailog: schemas.AILogTableCreate):
     db_ailog = models.AILogTable(**ailog.model_dump())
@@ -90,11 +90,30 @@ def delete_ailog(db: Session, log_id: str):
         db.commit()
     return db_ailog
 
-# ChatTable CRUD functions
-def get_chat(db: Session, userid: str):
-    return db.query(models.ChatTable).filter(models.ChatTable.userid == userid).first()
+def delete_ailogs(db: Session, aiid: str):
+    # AI ID와 관련된 모든 로그를 가져옴
+    ailogs = get_ailogs_by_aiid(db, aiid)
 
-def create_chat(db: Session, chat: schemas.ChatTableCreate):
+    if not ailogs:
+        return None  # 로그가 없으면 None 반환
+
+    # 각 로그를 순회하며 삭제
+    for log in ailogs:
+        db.delete(log)
+
+    # 모든 로그를 삭제한 후 commit
+    db.commit()
+
+    return ailogs  # 삭제된 로그 목록 반환
+# ChatTable CRUD functions
+def get_chat(db: Session, chatid: str):
+    return db.query(models.ChatTable).filter(models.ChatTable.chatid == chatid).first()
+
+# ChatTable CRUD functions
+def get_chats(db: Session, userid: str):
+    return db.query(models.ChatTable).filter(models.ChatTable.userid == userid).all()
+
+def create_chat(db: Session, chat: schemas.ChatTableBase):
     db_chat = models.ChatTable(**chat.model_dump())
     db.add(db_chat)
     db.commit()

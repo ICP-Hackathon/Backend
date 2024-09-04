@@ -7,9 +7,9 @@ def add_text(texts, metadatas, ids):
     faiss.save_db()
 
 # 쿼리에 따라 텍스트를 검색하는 함수
-def retrieve_documents(query, k=4):
+def retrieve_documents(query, ainame, k=4):
     # 예를 들어 results를 반환하는 함수를 가정하면,
-    results = faiss.db.similarity_search(query, k)  # similarity_search 함수는 이미 정의되어 있다고 가정    
+    results = faiss.db.similarity_search(query, k, filter={"source": ainame})  # similarity_search 함수는 이미 정의되어 있다고 가정    
     return results
 
 
