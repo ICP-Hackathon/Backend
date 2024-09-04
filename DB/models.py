@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Time, Text, func
+from sqlalchemy import Column, Integer, String, Time, Text, Float, func
 from DB.database import Base
 
 class UserTable(Base):
@@ -18,7 +18,8 @@ class AITable(Base):
     introductions = Column(String, nullable=True)
     usage = Column(Integer, nullable=True, default=0)
     total_usage = Column(Integer, nullable=True, default = 0)
-    ratio = Column(Integer, nullable=True, default = 0)
+    ratio = Column(Float, nullable=True, default = 0.1)
+    collect = Column(Float, nullable=True, default = 0)
 
 class AILogTable(Base):
     __tablename__ = "ailogtable"
@@ -28,6 +29,7 @@ class AILogTable(Base):
     createdat = Column(Time, nullable=True, default=func.current_timestamp())
     log = Column(Text, nullable=True)
     txurl = Column(String, nullable=True)
+    faissid = Column(String, nullable=True)
 
 class ChatTable(Base):
     __tablename__ = "chattable"

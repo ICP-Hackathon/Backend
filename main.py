@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from DB import crud, models, schemas
 from DB.database import SessionLocal, engine
 
-from AI.crud import add_text
+from AI.crud import add_text, delete_text
 from AI.main import rag_qa
 
 
@@ -63,8 +63,9 @@ def update_user(userid: str, user_update: schemas.UserTableUpdate, db: Session =
 def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     aiid = ai.creator + '_' + ai.name
 
+    faiss_id = ai.name + "tx" + str(random.random())
     # AI 콘텐츠를 추가하는 로직
-    add_text([ai.contents], [{"source" : aiid}], [ai.name + "tx" + str(random.random())])
+    add_text([ai.contents], [{"source" : aiid}], [faiss_id])
 
     #먼저 만들어졌었는지 확인
     db_ai = crud.get_ai(db, aiid=aiid)
@@ -87,14 +88,21 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
         aiid=aiid,
         log=ai.logs,
         txurl="create",
+        faissid = faiss_id
     )
     crud.create_ailog(db=db, ailog=ailog)
     
     return created_ai
-
+#인기있는 AI 보기
 @app.get("/ai/top10/", response_model=schemas.AITableListOut)
 def read_top_10_ais(db: Session = Depends(get_db)):
     ais = db.query(models.AITable).order_by(models.AITable.usage.desc()).limit(10).all()
+    return schemas.AITableListOut(ais=ais)
+
+# 내 AI 보기
+@app.get("/ai/myais/{userid}", response_model=schemas.AITableListOut)
+def read_my_ais(userid : str, db: Session = Depends(get_db)):
+    ais = db.query(models.AITable).filter(models.AITable.creator == userid).all()
     return schemas.AITableListOut(ais=ais)
 
 # 특정 AI 읽기
@@ -112,9 +120,11 @@ def update_ai(aiid: str, ai_update: schemas.AITableUserUpdateInput, db: Session 
     if not db_ai:
         raise HTTPException(status_code=400, detail="AI Not found")
 
+    faiss_id = None
     # AI 콘텐츠가 변경된 경우 add_text 호출
     if ai_update.contents != "":
-        add_text([ai_update.contents], [{"source" : db_ai.id}], [db_ai.name + "tx" + str(random.random())])
+        faiss_id = db_ai.name + "tx" + str(random.random())
+        add_text([ai_update.contents], [{"source" : db_ai.id}], [faiss_id])
     
     aiUpdateDB = schemas.AITableUserUpdate(
         category=ai_update.category,  # 카테고리 필드, None이 기본값
@@ -131,6 +141,7 @@ def update_ai(aiid: str, ai_update: schemas.AITableUserUpdateInput, db: Session 
         aiid=aiid,
         log=ai_update.logs,
         txurl="UPDATE",
+        faissid = faiss_id
     )
 
     crud.create_ailog(db=db, ailog=ailog)
@@ -147,9 +158,11 @@ def delete_ai(aiid: str, db: Session = Depends(get_db)):
     
     deleted_ai = crud.delete_ai(db=db, ai_id=aiid)
 
-    crud.delete_ailogs(db=db, aiid=aiid)
+    ai_logs = crud.get_ailogs_by_aiid(db=db, aiid=aiid)
+    ids = [i.faissid for i in ai_logs]
+    delete_text(ids)
 
-    ### FAISS 제거도 필요 ### 
+    crud.delete_ailogs(db=db, aiid=aiid)
 
     if not deleted_ai:
         raise HTTPException(status_code=404, detail="AI not found")
@@ -258,7 +271,8 @@ def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat
 
     aiUpdateDB = schemas.AITableUsageUpdate(
         usage = db_ai.usage + token.completion_tokens,
-        total_usage = db_ai.usage + token.total_tokens
+        total_usage = db_ai.usage + token.total_tokens,
+        collect = db_ai.collect + db_ai.ratio * token.completion_tokens
     )
     
     crud.update_usage_ai(db=db, aiid=chat_exist.aiid, ai_update=aiUpdateDB)
@@ -300,5 +314,47 @@ def read_chat_content(chat_id: str, db: Session = Depends(get_db)):
 #     return deleted_chat_content
 
 
-## MY AIS
 ## COLLECT MONEY
+
+
+@app.post("/login/", response_model=schemas.UserTableOut)
+def login_or_create_user(user: schemas.UserTableCreate, db: Session = Depends(get_db)):
+    db_user = crud.get_user(db, userid=user.userid)
+    if db_user:
+        return db_user  # 사용자가 이미 존재하면 사용자 정보 반환
+    else:
+        # 사용자가 존재하지 않으면 새로 생성
+        return crud.create_user(db=db, user=user)
+
+# 사용자 정보 업데이트
+@app.put("/user/{userid}", response_model=schemas.UserTableOut)
+def update_user(userid: str, user_update: schemas.UserTableUpdate, db: Session = Depends(get_db)):
+    updated_user = crud.update_user(db=db, userid=userid, user_update=user_update)
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return updated_user
+
+# 사용자 삭제
+# @app.delete("/user/{userid}", response_model=schemas.UserTableOut)
+# def delete_user(userid: str, db: Session = Depends(get_db)):
+#     deleted_user = crud.delete_user(db=db, userid=userid)
+#     if not deleted_user:
+#         raise HTTPException(status_code=404, detail="User not found")
+#     return deleted_user
+
+# AI로 번 돈 받기
+@app.post("/collect/{aiid}", response_model=schemas.AITableOut)
+def create_ai(aiid : str, db: Session = Depends(get_db)):
+    #먼저 만들어졌었는지 확인
+    print(aiid)
+    db_ai = crud.get_ai(db, aiid=aiid)
+    if not db_ai:
+        raise HTTPException(status_code=400, detail="AI Not exists")
+    
+    ##블록체인 쏘기
+    
+    aiUpdateDB = schemas.AITableCollectUpdate(
+        collect = 0
+    )
+
+    return crud.update_usage_ai(db=db, aiid=aiid, ai_update=aiUpdateDB)

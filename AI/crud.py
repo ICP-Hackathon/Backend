@@ -15,13 +15,13 @@ def retrieve_documents(query, ainame, k=4):
 
 # 특정 ID의 텍스트를 업데이트하는 함수
 def update_text(id_to_update, new_text, new_metadata):
-    faiss.db.delete_texts([id_to_update])
+    faiss.db.delete([id_to_update])
     faiss.db.add_texts([new_text], metadatas=[new_metadata], ids=[id_to_update])
     print(f"Updated document with ID: {id_to_update}")
     faiss.save_db()
 
 # 특정 ID의 텍스트를 삭제하는 함수
 def delete_text(ids):
-    faiss.db.delete_texts(ids)
+    faiss.db.delete(ids)
     print(f"Deleted document(s) with ID(s): {', '.join(ids)}")
     faiss.save_db()

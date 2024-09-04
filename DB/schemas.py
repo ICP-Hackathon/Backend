@@ -30,7 +30,9 @@ class AITableBase(BaseModel):
     introductions: Optional[str] = None
     usage: Optional[int] = 0
     total_usage: Optional[int] = 0
-    ratio: Optional[int] = 0
+    ratio: Optional[float] = 0.1
+    collect: Optional[float] = 0
+
     class Config:
         from_attributes = True
 
@@ -57,6 +59,10 @@ class AITableUserUpdate(BaseModel):
 class AITableUsageUpdate(BaseModel):
     usage: Optional[int] = 0
     total_usage: Optional[int] = 0
+    collect: Optional[float] = 0
+
+class AITableCollectUpdate(BaseModel):
+    collect: Optional[float] = 0
 
 class AITableInDB(AITableBase):
     pass
@@ -77,11 +83,14 @@ class AILogTableBase(BaseModel):
     createdat: Optional[time] = None
     log: Optional[str] = None
     txurl: Optional[str] = None
+    faissid: Optional[str] = None
+    
 
 class AILogTableCreate(BaseModel):
     aiid: Optional[str] = None
     log: Optional[str] = None
     txurl: Optional[str] = None
+    faissid: Optional[str] = None
 
 class AILogTableUpdate(AILogTableBase):
     pass

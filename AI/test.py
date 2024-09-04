@@ -17,4 +17,4 @@ db = FAISS.load_local(
     allow_dangerous_deserialization=True,
 )
 
-print(db.docstore._dict)
+print(db.index_to_docstore_id)

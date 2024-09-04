@@ -61,6 +61,15 @@ def update_usage_ai(db: Session, aiid: str, ai_update: schemas.AITableUsageUpdat
         db.refresh(db_ai)
     return db_ai
 
+def update_collect_ai(db: Session, aiid: str, ai_update: schemas.AITableCollectUpdate):
+    db_ai = get_ai(db, aiid)
+    if db_ai:
+        for key, value in ai_update.model_dump(exclude_unset=True).items():
+            setattr(db_ai, key, value)
+        db.commit()
+        db.refresh(db_ai)
+    return db_ai
+
 def delete_ai(db: Session, ai_id: str):
     db_ai = get_ai(db, ai_id)
     if db_ai:
