@@ -8,6 +8,7 @@ from DB import crud, models, schemas
 from DB.database import SessionLocal, engine
 
 from AI.crud import add_text
+from AI.main import rag_qa
 
 
 import random
@@ -63,7 +64,7 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     aiid = ai.creator + '_' + ai.name
 
     # AI 콘텐츠를 추가하는 로직
-    # add_text([ai.contents], [{"source" : aiid}], [ai.name + "tx" + str(random.random())])
+    add_text([ai.contents], [{"source" : aiid}], [ai.name + "tx" + str(random.random())])
 
     #먼저 만들어졌었는지 확인
     db_ai = crud.get_ai(db, aiid=aiid)
@@ -91,7 +92,6 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     
     return created_ai
 
-
 @app.get("/ai/top10/", response_model=schemas.AITableListOut)
 def read_top_10_ais(db: Session = Depends(get_db)):
     ais = db.query(models.AITable).order_by(models.AITable.usage.desc()).limit(10).all()
@@ -113,8 +113,8 @@ def update_ai(aiid: str, ai_update: schemas.AITableUserUpdateInput, db: Session 
         raise HTTPException(status_code=400, detail="AI Not found")
 
     # AI 콘텐츠가 변경된 경우 add_text 호출
-    # if ai_update.contents != "":
-    #     add_text([ai_update.contents], [{"source" : db_ai.aiid}], [db_ai.name + "ADD"])
+    if ai_update.contents != "":
+        add_text([ai_update.contents], [{"source" : db_ai.id}], [db_ai.name + "tx" + str(random.random())])
     
     aiUpdateDB = schemas.AITableUserUpdate(
         category=ai_update.category,  # 카테고리 필드, None이 기본값
@@ -235,7 +235,7 @@ def delete_chat(chat_id: str, db: Session = Depends(get_db)):
 # 채팅 내용 생성
 @app.post("/chatcontent/{chat_id}", response_model=schemas.ChatContentsTableOut)
 def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat_id :str, db: Session = Depends(get_db)):
-    chat_exist = crud.get_chat(db, chatid=chatid)
+    chat_exist = crud.get_chat(db, chatid=chat_id)
     if not chat_exist:
         raise HTTPException(status_code=400, detail="Chat Doesn't exists")
 
@@ -247,8 +247,33 @@ def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat
         senderid =  chat_content.senderid,
         message =  chat_content.message,
     )
+
+    crud.create_chat_content(db=db, chat_content=chatContentsTable)
+
     #RAG 답변 생성해서 넣기
-    return crud.create_chat_content(db=db, chat_content=chatContentsTable)
+    db_ai = crud.get_ai(db, aiid=chat_exist.aiid)
+
+    token, answer = rag_qa(chat_content.message, chat_exist.aiid)
+    # token, answer = rag_qa(chat_content.message, "dating_adivce_ai")
+
+    aiUpdateDB = schemas.AITableUsageUpdate(
+        usage = db_ai.usage + token.completion_tokens,
+        total_usage = db_ai.usage + token.total_tokens
+    )
+    
+    crud.update_usage_ai(db=db, aiid=chat_exist.aiid, ai_update=aiUpdateDB)
+
+
+    chatcontentsid = "AI " + chat_id + ctime()
+
+    answerContentsTable = schemas.ChatContentsTableCreate(
+        chatcontentsid =  chatcontentsid,
+        chatid =  chat_id,
+        senderid =  chat_exist.aiid,
+        message =  answer,
+    )
+
+    return crud.create_chat_content(db=db, chat_content=answerContentsTable)
 
 # 특정 채팅 내용 읽기
 @app.get("/chatcontents/{chat_id}", response_model=schemas.ChatContentsTableListOut)

@@ -54,6 +54,10 @@ class AITableUserUpdate(BaseModel):
     contents: Optional[str] = None
     logs: Optional[str] = None
 
+class AITableUsageUpdate(BaseModel):
+    usage: Optional[int] = 0
+    total_usage: Optional[int] = 0
+
 class AITableInDB(AITableBase):
     pass
 

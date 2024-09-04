@@ -28,10 +28,7 @@ def generate_answer(question, retrieved_docs):
     context = "\n\n".join([doc.page_content for doc in retrieved_docs])
     
     # Prepare the prompt with context and question
-    final_prompt = prompt.format(context=context, question=question)
-
-    print(final_prompt)
-    
+    final_prompt = prompt.format(context=context, question=question)    
     # Using the chat completion endpoint for GPT-4
     response = client.chat.completions.create(
         model="gpt-4",
