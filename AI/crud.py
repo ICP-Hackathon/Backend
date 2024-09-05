@@ -2,9 +2,10 @@ from AI.db import faiss
 
 # 데이터베이스에 새 텍스트를 추가하는 함수
 def add_text(texts, metadatas, ids):
-    faiss.db.add_texts(texts, metadatas=metadatas, ids=ids)
+    ids, embed = faiss.db.add_texts(texts, metadatas=metadatas, ids=ids)
     print(f"Added {len(texts)} text(s) to the database.")
     faiss.save_db()
+    return embed
 
 # 쿼리에 따라 텍스트를 검색하는 함수
 def retrieve_documents(query, ainame, k=4):

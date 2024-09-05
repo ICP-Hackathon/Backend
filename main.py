@@ -65,7 +65,8 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
 
     faiss_id = ai.name + "tx" + str(random.random())
     # AI 콘텐츠를 추가하는 로직
-    add_text([ai.contents], [{"source" : aiid}], [faiss_id])
+    embed = add_text([ai.contents], [{"source" : aiid}], [faiss_id])
+    print(embed)
 
     #먼저 만들어졌었는지 확인
     db_ai = crud.get_ai(db, aiid=aiid)
@@ -124,7 +125,8 @@ def update_ai(aiid: str, ai_update: schemas.AITableUserUpdateInput, db: Session 
     # AI 콘텐츠가 변경된 경우 add_text 호출
     if ai_update.contents != "":
         faiss_id = db_ai.name + "tx" + str(random.random())
-        add_text([ai_update.contents], [{"source" : db_ai.id}], [faiss_id])
+        embed = add_text([ai_update.contents], [{"source" : db_ai.id}], [faiss_id])
+        print(embed)
     
     aiUpdateDB = schemas.AITableUserUpdate(
         category=ai_update.category,  # 카테고리 필드, None이 기본값
