@@ -66,7 +66,6 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     faiss_id = ai.name + "tx" + str(random.random())
     # AI 콘텐츠를 추가하는 로직
     embed = add_text([ai.contents], [{"source" : aiid}], [faiss_id])
-    print(embed)
 
     #먼저 만들어졌었는지 확인
     db_ai = crud.get_ai(db, aiid=aiid)

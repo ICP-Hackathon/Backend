@@ -16,5 +16,6 @@ db = FAISS.load_local(
     embeddings=embeddings,
     allow_dangerous_deserialization=True,
 )
-
-print(db.index_to_docstore_id)
+res = db.similarity_search("What is Love", filter={'source': "User1_dating advice ai"})
+# print(db.docstore._dict)
+print(res)
