@@ -15,17 +15,12 @@ class UserTableUpdate(BaseModel):
     name: Optional[str] = None
     profileimage: Optional[str] = None
 
-class UserTableInDB(UserTableBase):
-    pass
-
-class UserTableOut(UserTableInDB):
-    pass
-
 # AITable 스키마
 class AITableBase(BaseModel):
     id: str
     name: Optional[str] = None
     creator: Optional[str] = None
+    image: Optional[str] = None
     category: Optional[str] = None
     introductions: Optional[str] = None
     usage: Optional[int] = 0
@@ -39,12 +34,14 @@ class AITableBase(BaseModel):
 class AITableCreate(BaseModel):
     name: Optional[str] = None
     creator: Optional[str] = None
+    image: Optional[str] = None
     category: Optional[str] = None
     introductions: Optional[str] = None
     contents: Optional[str] = None
     logs: Optional[str] = None
 
 class AITableUserUpdateInput(BaseModel):
+    image: Optional[str] = None
     category: Optional[str] = None
     introductions: Optional[str] = None
     contents: Optional[str] = None
@@ -63,12 +60,6 @@ class AITableUsageUpdate(BaseModel):
 
 class AITableCollectUpdate(BaseModel):
     collect: Optional[float] = 0
-
-class AITableInDB(AITableBase):
-    pass
-
-class AITableOut(AITableInDB):
-    pass
 
 class AITableListOut(BaseModel):
     ais: List[AITableBase]
@@ -92,18 +83,8 @@ class AILogTableCreate(BaseModel):
     txurl: Optional[str] = None
     faissid: Optional[str] = None
 
-class AILogTableUpdate(AILogTableBase):
-    pass
-
-class AILogTableInDB(AILogTableBase):
-    pass
-
-class AILogTableOut(AILogTableInDB):
-    class Config:
-        from_attributes = True
-
 class AILogTableListOut(BaseModel):
-    logs: List[AILogTableOut]
+    logs: List[AILogTableBase]
 
     class Config:
         from_attributes = True
@@ -119,15 +100,6 @@ class ChatTableBase(BaseModel):
 class ChatTableCreate(BaseModel):
     aiid: Optional[str] = None
     userid: Optional[str] = None
-
-class ChatTableUpdate(ChatTableBase):
-    pass
-
-class ChatTableInDB(ChatTableBase):
-    pass
-
-class ChatTableOut(ChatTableInDB):
-    pass
 
 class ChatTableListOut(BaseModel):
     chats: List[ChatTableBase]
@@ -154,15 +126,6 @@ class ChatContentsTableCreate(BaseModel):
     chatid: Optional[str] = None
     senderid: Optional[str] = None
     message: Optional[str] = None
-
-class ChatContentsTableUpdate(ChatContentsTableBase):
-    pass
-
-class ChatContentsTableInDB(ChatContentsTableBase):
-    pass
-
-class ChatContentsTableOut(ChatContentsTableInDB):
-    pass
 
 class ChatContentsTableListOut(BaseModel):
     chats: List[ChatContentsTableBase]

@@ -92,7 +92,7 @@ def create_ailog(db: Session, ailog: schemas.AILogTableCreate):
     db.refresh(db_ailog)
     return db_ailog
 
-def update_ailog(db: Session, log_id: str, ailog_update: schemas.AILogTableUpdate):
+def update_ailog(db: Session, log_id: str, ailog_update: schemas.AILogTableCreate):
     db_ailog = get_ailog(db, log_id)
     if db_ailog:
         for key, value in ailog_update.model_dump(exclude_unset=True).items():
@@ -138,14 +138,14 @@ def create_chat(db: Session, chat: schemas.ChatTableBase):
     db.refresh(db_chat)
     return db_chat
 
-def update_chat(db: Session, chat_id: str, chat_update: schemas.ChatTableUpdate):
-    db_chat = get_chat(db, chat_id)
-    if db_chat:
-        for key, value in chat_update.model_dump(exclude_unset=True).items():
-            setattr(db_chat, key, value)
-        db.commit()
-        db.refresh(db_chat)
-    return db_chat
+# def update_chat(db: Session, chat_id: str, chat_update: schemas.ChatTableUpdate):
+#     db_chat = get_chat(db, chat_id)
+#     if db_chat:
+#         for key, value in chat_update.model_dump(exclude_unset=True).items():
+#             setattr(db_chat, key, value)
+#         db.commit()
+#         db.refresh(db_chat)
+#     return db_chat
 
 def delete_chat(db: Session, chat_id: str):
     db_chat = get_chat(db, chat_id)

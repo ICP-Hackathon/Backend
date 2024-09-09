@@ -14,6 +14,7 @@ class AITable(Base):
     id = Column(String, nullable=False, primary_key=True)
     name = Column(String, nullable=True)
     creator = Column(String, nullable=True)
+    image = Column(String, nullable=True)
     category = Column(String, nullable=True)
     introductions = Column(String, nullable=True)
     usage = Column(Integer, nullable=True, default=0)
@@ -26,7 +27,7 @@ class AILogTable(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     aiid = Column(String, primary_key=True, nullable=True)
-    createdat = Column(Time, nullable=True, default=func.current_timestamp())
+    createdat = Column(Time, nullable=True, default=func.now())
     log = Column(Text, nullable=True)
     txurl = Column(String, nullable=True)
     faissid = Column(String, nullable=True)
@@ -43,6 +44,6 @@ class ChatContentsTable(Base):
 
     chatcontentsid = Column(String, nullable=False, primary_key=True)
     chatid = Column(String, nullable=True)
-    createdat = Column(Time, nullable=True, default=func.current_timestamp())
+    createdat = Column(Time, nullable=True, default=func.now())
     senderid = Column(String, nullable=True)
     message = Column(Text, nullable=True)

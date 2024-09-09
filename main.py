@@ -9,6 +9,8 @@ from DB.database import SessionLocal, engine
 
 from AI.crud import add_text, delete_text
 from AI.main import rag_qa
+from fastapi.middleware.cors import CORSMiddleware
+
 
 
 import random
@@ -19,6 +21,16 @@ from time import ctime
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # 허용할 클라이언트의 도메인
+    allow_credentials=True,
+    allow_methods=["*"],  # 허용할 HTTP 메서드 (GET, POST, OPTIONS 등)
+    allow_headers=["*"],  # 허용할 헤더
+)
+
+
 
 # 종속성 만들기: 요청 당 독립적인 데이터베이스 세션/연결이 필요하고 요청이 완료되면 닫음
 def get_db():
@@ -33,7 +45,7 @@ def read_root():
     return {"Hello": "World"}
 
 # 유저가 지갑 연결
-@app.post("/login/", response_model=schemas.UserTableOut)
+@app.post("/login/", response_model=schemas.UserTableBase)
 def login_or_create_user(user: schemas.UserTableCreate, db: Session = Depends(get_db)):
     db_user = crud.get_user(db, userid=user.userid)
     if db_user:
@@ -43,7 +55,7 @@ def login_or_create_user(user: schemas.UserTableCreate, db: Session = Depends(ge
         return crud.create_user(db=db, user=user)
 
 # 사용자 정보 업데이트
-@app.put("/user/{userid}", response_model=schemas.UserTableOut)
+@app.put("/user/{userid}", response_model=schemas.UserTableBase)
 def update_user(userid: str, user_update: schemas.UserTableUpdate, db: Session = Depends(get_db)):
     updated_user = crud.update_user(db=db, userid=userid, user_update=user_update)
     if not updated_user:
@@ -59,7 +71,7 @@ def update_user(userid: str, user_update: schemas.UserTableUpdate, db: Session =
 #     return deleted_user
 
 # AI 생성
-@app.post("/ai/", response_model=schemas.AITableOut)
+@app.post("/ai/", response_model=schemas.AITableBase)
 def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     aiid = ai.creator + '_' + ai.name
 
@@ -106,7 +118,7 @@ def read_my_ais(userid : str, db: Session = Depends(get_db)):
     return schemas.AITableListOut(ais=ais)
 
 # 특정 AI 읽기
-@app.get("/ai/{aiid}", response_model=schemas.AITableOut)
+@app.get("/ai/{aiid}", response_model=schemas.AITableBase)
 def read_ai(aiid: str, db: Session = Depends(get_db)):
     db_ai = crud.get_ai(db, aiid=aiid)
     if not db_ai:
@@ -114,7 +126,7 @@ def read_ai(aiid: str, db: Session = Depends(get_db)):
     return db_ai
 
 # AI 정보 업데이트
-@app.put("/ai/{aiid}", response_model=schemas.AITableOut)
+@app.put("/ai/{aiid}", response_model=schemas.AITableBase)
 def update_ai(aiid: str, ai_update: schemas.AITableUserUpdateInput, db: Session = Depends(get_db)):
     db_ai = crud.get_ai(db, aiid=aiid)
     if not db_ai:
@@ -150,7 +162,7 @@ def update_ai(aiid: str, ai_update: schemas.AITableUserUpdateInput, db: Session 
     return updated_ai
 
 # AI 삭제
-@app.delete("/ai/{aiid}", response_model=schemas.AITableOut)
+@app.delete("/ai/{aiid}", response_model=schemas.AITableBase)
 def delete_ai(aiid: str, db: Session = Depends(get_db)):
 
     db_ai = crud.get_ai(db, aiid=aiid)
@@ -202,7 +214,7 @@ def read_ailog_by_aiid(aiid: str, db: Session = Depends(get_db)):
 #     return deleted_ailog
 
 # 채팅 생성
-@app.post("/chats/", response_model=schemas.ChatTableOut)
+@app.post("/chats/", response_model=schemas.ChatTableBase)
 def create_chat(chat: schemas.ChatTableCreate, db: Session = Depends(get_db)):
     db_ai = crud.get_ai(db, aiid=chat.aiid)
     if not db_ai:
@@ -239,7 +251,7 @@ def read_chat(userid: str, db: Session = Depends(get_db)):
 #     return updated_chat
 
 # 채팅 삭제
-@app.delete("/chats/{chat_id}", response_model=schemas.ChatTableOut)
+@app.delete("/chats/{chat_id}", response_model=schemas.ChatTableBase)
 def delete_chat(chat_id: str, db: Session = Depends(get_db)):
     deleted_chat = crud.delete_chat(db=db, chat_id=chat_id)
     if not deleted_chat:
@@ -247,7 +259,7 @@ def delete_chat(chat_id: str, db: Session = Depends(get_db)):
     return deleted_chat
 
 # 채팅 내용 생성
-@app.post("/chatcontent/{chat_id}", response_model=schemas.ChatContentsTableOut)
+@app.post("/chatcontent/{chat_id}", response_model=schemas.ChatContentsTableBase)
 def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat_id :str, db: Session = Depends(get_db)):
     chat_exist = crud.get_chat(db, chatid=chat_id)
     if not chat_exist:
@@ -318,7 +330,7 @@ def read_chat_content(chat_id: str, db: Session = Depends(get_db)):
 ## COLLECT MONEY
 
 
-@app.post("/login/", response_model=schemas.UserTableOut)
+@app.post("/login/", response_model=schemas.UserTableBase)
 def login_or_create_user(user: schemas.UserTableCreate, db: Session = Depends(get_db)):
     db_user = crud.get_user(db, userid=user.userid)
     if db_user:
@@ -328,7 +340,7 @@ def login_or_create_user(user: schemas.UserTableCreate, db: Session = Depends(ge
         return crud.create_user(db=db, user=user)
 
 # 사용자 정보 업데이트
-@app.put("/user/{userid}", response_model=schemas.UserTableOut)
+@app.put("/user/{userid}", response_model=schemas.UserTableBase)
 def update_user(userid: str, user_update: schemas.UserTableUpdate, db: Session = Depends(get_db)):
     updated_user = crud.update_user(db=db, userid=userid, user_update=user_update)
     if not updated_user:
@@ -344,7 +356,7 @@ def update_user(userid: str, user_update: schemas.UserTableUpdate, db: Session =
 #     return deleted_user
 
 # AI로 번 돈 받기
-@app.post("/collect/{aiid}", response_model=schemas.AITableOut)
+@app.post("/collect/{aiid}", response_model=schemas.AITableBase)
 def create_ai(aiid : str, db: Session = Depends(get_db)):
     #먼저 만들어졌었는지 확인
     print(aiid)
