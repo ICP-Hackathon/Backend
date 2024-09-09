@@ -5,6 +5,7 @@ from . import models, schemas
 def get_user(db: Session, userid: str):
     return db.query(models.UserTable).filter(models.UserTable.userid == userid).first()
 
+
 def create_user(db: Session, user: schemas.UserTableCreate):
     db_user = models.UserTable(**user.model_dump())
     db.add(db_user)
@@ -31,6 +32,9 @@ def delete_user(db: Session, userid: str):
 # AITable CRUD functions
 def get_ai(db: Session, aiid: str):
     return db.query(models.AITable).filter(models.AITable.id == aiid).first()
+
+def search_ai(db: Session, name: str):
+    return db.query(models.AITable).filter(models.AITable.name.like(f"%{name}%")).all()
 
 # AITable CRUD functions
 def get_top_10_ai_by_usage(db: Session):

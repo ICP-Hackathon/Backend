@@ -61,12 +61,21 @@ class AITableUsageUpdate(BaseModel):
 class AITableCollectUpdate(BaseModel):
     collect: Optional[float] = 0
 
+class AISearch(BaseModel):
+    name: Optional[str] = None
+    creator: Optional[str] = None
+    image: Optional[str] = None
+
+
 class AITableListOut(BaseModel):
     ais: List[AITableBase]
-
     class Config:
         from_attributes = True
-
+        
+class AISearchListOut(BaseModel):
+    ais : List[AISearch]
+    class Config:
+        from_attributes = True
 # AILogTable 스키마
 class AILogTableBase(BaseModel):
     id: int

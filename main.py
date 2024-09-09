@@ -125,6 +125,21 @@ def read_ai(aiid: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="AI not found")
     return db_ai
 
+@app.get("/ai/search/{ainame}", response_model=schemas.AISearchListOut)
+def search_ai(ainame: str, db: Session = Depends(get_db)):
+    db_ai = crud.search_ai(db, name=ainame)
+    if not db_ai:
+        raise HTTPException(status_code=404, detail="AI not found")
+    search_results = [
+        schemas.AISearch(
+            name=ai.name,
+            creator=ai.creator,
+            image=ai.image
+        ) for ai in db_ai
+    ]
+    return schemas.AISearchListOut(ais=search_results)
+
+
 # AI 정보 업데이트
 @app.put("/ai/{aiid}", response_model=schemas.AITableBase)
 def update_ai(aiid: str, ai_update: schemas.AITableUserUpdateInput, db: Session = Depends(get_db)):
