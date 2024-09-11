@@ -7,10 +7,9 @@ from dotenv import load_dotenv
 # Load the environment variables from the .env file
 load_dotenv()
 # Load the OpenAI API key from the environment variables
-api_key = os.getenv("OPENAI_API_KEY")
 
 # Initialize the OpenAIEmbeddings class with the loaded API key
-embeddings = OpenAIEmbeddings(api_key=api_key)
+embeddings = OpenAIEmbeddings()
 
 class FAISSDatabase:
     def __init__(self, folder_path, index_name, embeddings):

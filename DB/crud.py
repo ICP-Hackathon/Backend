@@ -36,6 +36,9 @@ def get_ai(db: Session, aiid: str):
 def search_ai(db: Session, name: str):
     return db.query(models.AITable).filter(models.AITable.name.like(f"%{name}%")).all()
 
+def get_my_ais(db: Session, user: str):
+    return db.query(models.AITable).filter(models.AITable.id.like(f"%{user}%")).all()
+
 # AITable CRUD functions
 def get_top_10_ai_by_usage(db: Session):
     return db.query(models.AITable).order_by(models.AITable.usage.desc()).limit(10).all()

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import time
+from datetime import time, datetime
 
 # UserTable 스키마
 class UserTableBase(BaseModel):
@@ -84,7 +84,8 @@ class AILogTableBase(BaseModel):
     log: Optional[str] = None
     txurl: Optional[str] = None
     faissid: Optional[str] = None
-    
+    class Config:
+        from_attributes = True   
 
 class AILogTableCreate(BaseModel):
     aiid: Optional[str] = None

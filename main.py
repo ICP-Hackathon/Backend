@@ -24,7 +24,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # 허용할 클라이언트의 도메인
+    allow_origins=["http://localhost:3000", "http://localhost:5000", 'https://nearanddear.ysblockblock.com'],  # 허용할 클라이언트의 도메인
     allow_credentials=True,
     allow_methods=["*"],  # 허용할 HTTP 메서드 (GET, POST, OPTIONS 등)
     allow_headers=["*"],  # 허용할 헤더
@@ -71,7 +71,7 @@ def update_user(userid: str, user_update: schemas.UserTableUpdate, db: Session =
 #     return deleted_user
 
 # AI 생성
-@app.post("/ai/", response_model=schemas.AITableBase)
+@app.post("/ai", response_model=schemas.AITableBase)
 def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     aiid = ai.creator + '_' + ai.name
 
@@ -114,7 +114,7 @@ def read_top_10_ais(db: Session = Depends(get_db)):
 # 내 AI 보기
 @app.get("/ai/myais/{userid}", response_model=schemas.AITableListOut)
 def read_my_ais(userid : str, db: Session = Depends(get_db)):
-    ais = db.query(models.AITable).filter(models.AITable.creator == userid).all()
+    ais = crud.get_my_ais(db=db, user=userid)
     return schemas.AITableListOut(ais=ais)
 
 # 특정 AI 읽기
@@ -210,7 +210,11 @@ def read_ailog_by_aiid(aiid: str, db: Session = Depends(get_db)):
     db_ailogs = crud.get_ailogs_by_aiid(db, aiid=aiid)
     if not db_ailogs:
         raise HTTPException(status_code=404, detail="Log not found")
-    return schemas.AILogTableListOut(logs=db_ailogs)
+    
+    # SQLAlchemy 객체를 Pydantic 모델로 변환
+    pydantic_ailogs = [schemas.AILogTableBase.from_orm(log) for log in db_ailogs]
+    
+    return schemas.AILogTableListOut(logs=pydantic_ailogs)
 
 # AI 로그 정보 업데이트
 # @app.put("/ailogs/{log_id}", response_model=schemas.AILogTableOut)
