@@ -253,8 +253,6 @@ def create_chat(chat: schemas.ChatTableCreate, db: Session = Depends(get_db)):
 @app.get("/chats/{userid}", response_model=schemas.ChatTableListOut)
 def read_chat(userid: str, db: Session = Depends(get_db)):
     db_chat = crud.get_chats(db, userid=userid)
-    if not db_chat:
-        raise HTTPException(status_code=404, detail="Chat not found")
     return schemas.ChatTableListOut(chats=db_chat)
 
 # 채팅 정보 업데이트
@@ -294,8 +292,8 @@ def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat
     #RAG 답변 생성해서 넣기
     db_ai = crud.get_ai(db, aiid=chat_exist.aiid)
 
-    token, answer = rag_qa(chat_content.message, chat_exist.aiid)
-    # token, answer = rag_qa(chat_content.message, "dating_adivce_ai")
+    # token, answer = rag_qa(chat_content.message, chat_exist.aiid)
+    token, answer = rag_qa(chat_content.message, "dating_adivce_ai")
 
     aiUpdateDB = schemas.AITableUsageUpdate(
         usage = db_ai.usage + token.completion_tokens,
@@ -306,7 +304,7 @@ def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat
     crud.update_usage_ai(db=db, aiid=chat_exist.aiid, ai_update=aiUpdateDB)
 
 
-    chatcontentsid = "AI " + chat_id + ctime()
+    chatcontentsid = "AI_" + chat_id + ctime()
 
     answerContentsTable = schemas.ChatContentsTableCreate(
         chatcontentsid =  chatcontentsid,
@@ -321,8 +319,7 @@ def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat
 @app.get("/chatcontents/{chat_id}", response_model=schemas.ChatContentsTableListOut)
 def read_chat_content(chat_id: str, db: Session = Depends(get_db)):
     db_chat_content = crud.get_chat_contents(db, chat_id=chat_id)
-    if not db_chat_content:
-        raise HTTPException(status_code=404, detail="Chat content not found")
+
     return schemas.ChatContentsTableListOut(chats=db_chat_content)
 
 # 채팅 내용 업데이트
