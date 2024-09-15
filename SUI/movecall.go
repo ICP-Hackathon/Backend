@@ -40,7 +40,7 @@ func MoveCall(
 
 	gasObj := "0x71434fc47595c28e2a361d579e58d4f9b3931daa879398f1c4ad67ab1e04e7a7"
 
-	packageObjectId := "0xa97d9cfeaa88e79f24fb714274751c581b12fff348ac329ecc12f85c01c43052"
+	packageObjectId := "0x9baf404d6a3ad42dcc3b6c309f47da385c7b527c4470a679346d5647a2578d6f"
 	module := "ragcoon"
 
 	rsp, err := cli.MoveCall(ctx, models.MoveCallRequest{
