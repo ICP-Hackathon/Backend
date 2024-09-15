@@ -239,6 +239,7 @@ def update_ai(ai_update: schemas.AITableUserUpdateInput, db: Session = Depends(g
         faiss_id = db_ai.name + "tx" + str(random.random())
         embed = add_text([ai_update.contents], [{"source" : db_ai.ai_id}], [faiss_id])
         res = send_data(str(embed))
+
         blob_id = ''
         if 'newlyCreated' in res :
             blob_id = res['newlyCreated']['blobObject']['blobId']
@@ -248,8 +249,8 @@ def update_ai(ai_update: schemas.AITableUserUpdateInput, db: Session = Depends(g
         url = BASE_URL + "/movecall/add_blob_id"  # The URL of the REST API you want to call
         headers = {"Content-Type": "application/json"}
         params = {
-            "ragcoonStageId": "0x6cf0caaed681c010a3466a6c0c9ea6169b114c25ad708193f2dec506b1a35b70",
-            "creatorID": "db",
+            "ragcoonStageId": RAGCOON_STAGE_ID,
+            "creatorAddress": db_ai.creator_address,
             "AIID" : db_ai.ai_id,
             "blobID" : blob_id
         }
