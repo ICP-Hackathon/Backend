@@ -27,7 +27,22 @@ def add_user_creator_consumser(user_address: str):
     print("Consumer Response")
     print(consumer_response)
 
-def add_blob(db_ai: models.AITable , embed: str):
+def add_ai(ai_id: str, creator_address: str):
+    url = BASE_URL + "/movecall/add_ai"  # The URL of the REST API you want to call
+    headers = {"Content-Type": "application/json"}
+    params = {
+        "ragcoonStageId": RAGCOON_STAGE_ID,
+        "creatorAddress": creator_address,
+        "AIID" : ai_id,
+    }
+
+    response = requests.get(url, params=params, headers=headers).json()
+    digest = response.get('digest')
+    return digest
+
+
+def add_blob(ai: models.AITable , embed: str):
+    url = BASE_URL + "/movecall/add_blob_id"  # The URL of the REST API you want to call
     res = walrus.send_data(str(embed))
 
     blob_id = ''
@@ -36,15 +51,15 @@ def add_blob(db_ai: models.AITable , embed: str):
     elif 'alreadyCertified' in res :
         blob_id = res['alreadyCertified']['blobId']
 
-    url = BASE_URL + "/movecall/add_blob_id"  # The URL of the REST API you want to call
     headers = {"Content-Type": "application/json"}
     params = {
         "ragcoonStageId": RAGCOON_STAGE_ID,
-        "creatorAddress": db_ai.creator_address,
-        "AIID" : db_ai.ai_id,
+        "creatorAddress": ai.creator_address,
+        "AIID" : ai.ai_id,
         "blobID" : blob_id
     }
     # Make the POST request to another API with the received data
     response = requests.get(url, params=params, headers=headers).json()
-    digest = (response.get('digest'))
+    digest = response.get('digest')
     return digest
+

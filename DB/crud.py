@@ -132,8 +132,22 @@ def search_ai(db: Session, name: str):
 # def get_top_10_ai_by_usage(db: Session):
 #     return db.query(models.AITable).order_by(models.AITable.usage.desc()).limit(10).all()
 
-def create_ai(db: Session, ai: schemas.AITableCreate):
-    db_ai = models.AITable(**ai.model_dump())
+def create_ai(db: Session,ai_id:str, ai: schemas.AITableCreate):
+    aiDB = schemas.AITableBase(
+        ai_id = ai_id,
+        creator_address =  ai.creator_address,
+        created_at = datetime.now(),
+        name = ai.name,
+        image_url = ai.image_url,
+        category = ai.category,
+        introductions = ai.introductions,
+        chat_counts=0,
+        prompt_tokens=0,
+        completion_tokens=0,
+        weekly_users = 0
+    )
+
+    db_ai = models.AITable(**aiDB.model_dump())
     db.add(db_ai)
     db.commit()
     db.refresh(db_ai)
@@ -188,11 +202,12 @@ def delete_ai(db: Session, ai_id: str):
 def get_raglogs_by_aiid(db: Session, ai_id: str):
     return db.query(models.RAGTable).filter(models.RAGTable.ai_id == ai_id).all()
 
-def create_rag(db: Session, ai_update: schemas.AITableUserUpdateInput, digest: str, faiss_id: str):
+# def create_rag(db: Session, ai_update: schemas.AITableUserUpdateInput, digest: str, faiss_id: str):
+def create_rag(db: Session, ai_id: str, comments: str, digest: str, faiss_id: str):
     rag = schemas.RAGTableCreate(
-        ai_id = ai_update.ai_id,
+        ai_id = ai_id,
         created_at = datetime.now(),
-        comments =ai_update.comments,
+        comments = comments,
         tx_url= digest,
         faissid = faiss_id
     )

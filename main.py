@@ -12,7 +12,6 @@ from AI.crud import add_text, delete_text
 from AI.main import rag_qa
 from fastapi.middleware.cors import CORSMiddleware
 
-from Walrus import walrus
 from SUI import suiapi
 
 import random
@@ -76,25 +75,56 @@ def add_user(user: schemas.UserTableCreate, db: Session = Depends(get_db)):
 
 @app.get("/ais/{offset}/{limit}", response_model=schemas.AITableListOut)
 def get_ais(offset: int, limit: int, db: Session = Depends(get_db)):
-    return crud.get_ais(db=db, offset=offset, limit=limit)
+    res = crud.get_ais(db=db, offset=offset, limit=limit)
+    return schemas.AITableListOut(ais=res)
 
-@app.get("/ais/{ai_id}", response_model=schemas.AITableOut)
+@app.get("/ais/{ai_id}", response_model=schemas.AIDetail)
 def get_ai(ai_id: str, db: Session = Depends(get_db)):
-    return crud.get_ai(db=db, ai_id=ai_id)
+    db_ai = crud.get_ai_detail(db, ai_id=ai_id)
+    if not db_ai:
+        raise HTTPException(status_code=404, detail="AI not found")
+    return db_ai
 
 @app.get("/ais/{user_address}", response_model=schemas.AITableListOut)
 def get_user_ais(user_address: str, db: Session = Depends(get_db)):
-    return crud.get_user_ais(db=db, user_address=user_address)
+    res = crud.get_user_ais(db=db, user_address=user_address)
+    return schemas.AITableListOut(ais=res)
 
 @app.get("/ais/{ai_id}/rags", response_model=schemas.RAGTableListOut)
 def get_rags(ai_id: str, db: Session = Depends(get_db)):
-    return get_rags(db=db, ai_id=ai_id)
+    res = crud.get_rags(db=db, ai_id=ai_id)
+    return schemas.RAGTableListOut(logs=res)
 
 @app.post("/ais", response_model=schemas.AITableBase)
 def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
-    return create_ai(db=db, ai=ai)
+    ai_id = ai.creator_address + '_' + ai.name
 
-@app.put("/ais", response_model= schemas.AITableOut)
+    #먼저 만들어졌었는지 확인
+    db_ai = crud.get_ai(db, ai_id=ai_id)
+    if db_ai:
+        raise HTTPException(status_code=400, detail="AI with this ID already exists")
+
+    db_user = crud.get_user(db, user_address=ai.creator_address)
+    if not db_user:
+        raise HTTPException(status_code=400, detail="You are not user")
+    
+    faiss_id = ai.name + "tx" + str(random.random())
+
+    # AI 콘텐츠를 추가하는 로직
+    embed = add_text([ai.contents], [{"source" : ai_id}], [faiss_id])
+
+    # 블록체인에 ai 생성
+    suiapi.add_ai(ai_id=ai_id, creator_address=ai.creator_address)
+
+    # blov 저장
+    digest = suiapi.add_blob(ai=ai, embed=embed)
+    
+    # AILog 테이블에 로그 기록
+    crud.create_rag(db=db, ai_id=ai_id, comments=ai.comments, digest=digest, faiss_id=faiss_id)
+    
+    return crud.create_ai(db=db, ai_id=ai_id, ai=ai)
+
+@app.put("/ais", response_model= schemas.AITableBase)
 def update_ais(ai_update: schemas.AITableUserUpdateInput,db: Session = Depends(get_db)):
     db_ai = crud.get_ai(db, ai_id=ai_update.ai_id)
     if not db_ai:
@@ -107,16 +137,32 @@ def update_ais(ai_update: schemas.AITableUserUpdateInput,db: Session = Depends(g
         faiss_id = db_ai.name + "tx" + str(random.random())
         embed = add_text([ai_update.contents], [{"source" : db_ai.ai_id}], [faiss_id])
 
-        digest = suiapi.add_blob(db_ai=db_ai, embed=embed)
+        digest = suiapi.add_blob(ai=db_ai, embed=embed)
 
-        crud.create_rag(db=db, ai_update=ai_update, digest=digest, faiss_id=faiss_id)
+        crud.create_rag(db=db, ai_id=ai_update.ai_id, comments=ai_update.comments, digest=digest, faiss_id=faiss_id)
     
     return crud.update_ai(db=db, ai_id=ai_update.ai_id, ai_update=ai_update)
 
 @app.delete("/ais/{ai_id}/{user_address}", response_model=schemas.AITableBase)
 def delete_ai(ai_id: str, user_address: str, db: Session = Depends(get_db)):
-    return
 
+    db_ai = crud.get_ai(db, ai_id=ai_id)
+    if not db_ai:
+        raise HTTPException(status_code=404, detail="AI not found")
+    if db_ai.creator_address != user_address:
+        raise HTTPException(status_code=400, detail="You are not the owner of AI")
+    
+    deleted_ai = crud.delete_ai(db=db, ai_id=ai_id)
+
+    ai_logs = crud.get_raglogs_by_aiid(db=db, ai_id=ai_id)
+    ids = [i.faiss_id for i in ai_logs]
+    delete_text(ids)
+
+    crud.delete_raglogs(db=db, ai_id=ai_id)
+
+    if not deleted_ai:
+        raise HTTPException(status_code=404, detail="AI not found")
+    return deleted_ai
 
 #인기있는 AI 보기
 @app.get("/get_trend_ais/{category}/{offset}/{limit}", response_model=schemas.AITableListOut)
@@ -149,174 +195,6 @@ def search_ai(ai_name: str, db: Session = Depends(get_db)):
     return schemas.AISearchListOut(ais=search_results)
 
 
-@app.post("/create_ai", response_model=schemas.AITableBase)
-def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
-    add_ai_url = BASE_URL + "/movecall/add_ai"  # The URL of the REST API you want to call
-    add_blob_url = BASE_URL + "/movecall/add_blob_id"  # The URL of the REST API you want to call
-
-    ai_id = ai.creator_address + '_' + ai.name
-
-
-    #먼저 만들어졌었는지 확인
-    db_ai = crud.get_ai(db, ai_id=ai_id)
-    if db_ai:
-        raise HTTPException(status_code=400, detail="AI with this ID already exists")
-
-    db_user = crud.get_user(db, user_address=ai.creator_address)
-    if not db_user:
-        raise HTTPException(status_code=400, detail="You are not user")
-    
-    faiss_id = ai.name + "tx" + str(random.random())
-
-    # AI 콘텐츠를 추가하는 로직
-    embed = add_text([ai.contents], [{"source" : ai_id}], [faiss_id])
-    res = walrus.send_data(str(embed))
-    blob_id = ''
-    if 'newlyCreated' in res :
-        blob_id = res['newlyCreated']['blobObject']['blobId']
-    elif 'alreadyCertified' in res :
-        blob_id = res['alreadyCertified']['blobId']    
-    # Extract necessary data from the request (example)
-
-    add_ai_params = {
-        "ragcoonStageId": RAGCOON_STAGE_ID,
-        "creatorAddress": ai.creator_address,
-        "AIID" : ai_id,
-    }
-
-    response1 = requests.get(add_ai_url, params=add_ai_params, headers=headers).json()
-    # digest1 = response1.get('digest')
-
-    add_blob_params = {
-        "ragcoonStageId": RAGCOON_STAGE_ID,
-        "creatorAddress": ai.creator_address,
-        "AIID" : ai_id,
-        "blobID" : blob_id
-    }
-    # Make the POST request to another API with the received data
-    response2 = requests.get(add_blob_url, params=add_blob_params, headers=headers).json()
-    digest = response2.get('digest')
-
-    aiDB = schemas.AITableBase(
-        ai_id = ai_id,
-        creator_address =  ai.creator_address,
-        created_at = datetime.now(),
-        name = ai.name,
-        image_url = ai.image_url,
-        category = ai.category,
-        introductions = ai.introductions,
-        chat_counts=0,
-        prompt_tokens=0,
-        completion_tokens=0,
-        weekly_users = 0
-        )
-
-#     # AI 테이블에 새로운 항목 생성
-    created_ai = crud.create_ai(db=db, ai=aiDB)
-    
-    # AILog 테이블에 로그 기록
-    rag = schemas.RAGTableCreate(
-        ai_id = ai_id,
-        created_at = datetime.now(),
-        comments =ai.comments,
-        tx_url= "test",
-        faissid = faiss_id
-    )
-    crud.create_rag(db=db, rag=rag)
-    
-    return created_ai
-
-# AI 정보 업데이트
-@app.put("/update_ai/", response_model=schemas.AITableBase)
-def update_ai(ai_update: schemas.AITableUserUpdateInput, db: Session = Depends(get_db)):
-    db_ai = crud.get_ai(db, ai_id=ai_update.ai_id)
-    if not db_ai:
-        raise HTTPException(status_code=400, detail="AI Not found")
-    if db_ai.creator_address != ai_update.user_address:
-        raise HTTPException(status_code=400, detail="You are not the owner of AI")
-
-    # AI 콘텐츠가 변경된 경우 add_text 호출
-    if ai_update.contents != "":
-        faiss_id = db_ai.name + "tx" + str(random.random())
-        embed = add_text([ai_update.contents], [{"source" : db_ai.ai_id}], [faiss_id])
-        res = walrus.send_data(str(embed))
-
-        blob_id = ''
-        if 'newlyCreated' in res :
-            blob_id = res['newlyCreated']['blobObject']['blobId']
-        elif 'alreadyCertified' in res :
-            blob_id = res['alreadyCertified']['blobId']
-
-        url = BASE_URL + "/movecall/add_blob_id"  # The URL of the REST API you want to call
-        headers = {"Content-Type": "application/json"}
-        params = {
-            "ragcoonStageId": RAGCOON_STAGE_ID,
-            "creatorAddress": db_ai.creator_address,
-            "AIID" : db_ai.ai_id,
-            "blobID" : blob_id
-        }
-        # Make the POST request to another API with the received data
-        response = requests.get(url, params=params, headers=headers).json()
-        digest = (response.get('digest'))
-            
-        # AILog 테이블에 로그 기록
-        rag = schemas.RAGTableCreate(
-            ai_id = ai_update.ai_id,
-            created_at = datetime.now(),
-            comments =ai_update.comments,
-            tx_url= digest,
-            faissid = faiss_id
-        )
-
-        crud.create_rag(db=db, rag=rag)
-    
-    aiUpdateDB = schemas.AITableUpdate(
-        name = ai_update.name,
-        image_url = ai_update.image_url,
-        category= ai_update.category,  # 카테고리 필드, None이 기본값
-        introductions=ai_update.introductions  # 소개 필드, None이 기본값
-    )
-
-    # AI 정보를 업데이트
-    updated_ai = crud.update_ai(db=db, ai_id=ai_update.ai_id, ai_update=aiUpdateDB)
-    
-    return updated_ai
-
-
-# # 내 AI 보기
-@app.get("/get_my_ais/{user_address}", response_model=schemas.AITableListOut)
-def read_my_ais(user_address : str, db: Session = Depends(get_db)):
-    res =  crud.get_user_ais(db=db, user_address=user_address)
-    return schemas.AITableListOut(ais=res)
-# # 특정 AI 읽기
-@app.get("/get_ai_detail/{ai_id}", response_model=schemas.AIDetail)
-def read_ai(ai_id: str, db: Session = Depends(get_db)):
-    db_ai = crud.get_ai_detail(db, ai_id=ai_id)
-    if not db_ai:
-        raise HTTPException(status_code=404, detail="AI not found")
-    return db_ai
-
-# AI 삭제
-@app.delete("/delete_ai/{ai_id}/{user_address}", response_model=schemas.AITableBase)
-def delete_ai(ai_id: str, user_address: str, db: Session = Depends(get_db)):
-
-    db_ai = crud.get_ai(db, ai_id=ai_id)
-    if not db_ai:
-        raise HTTPException(status_code=404, detail="AI not found")
-    if db_ai.creator_address != user_address:
-        raise HTTPException(status_code=400, detail="You are not the owner of AI")
-    
-    deleted_ai = crud.delete_ai(db=db, ai_id=ai_id)
-
-    ai_logs = crud.get_raglogs_by_aiid(db=db, ai_id=ai_id)
-    ids = [i.faiss_id for i in ai_logs]
-    delete_text(ids)
-
-    crud.delete_raglogs(db=db, ai_id=ai_id)
-
-    if not deleted_ai:
-        raise HTTPException(status_code=404, detail="AI not found")
-    return deleted_ai
 
 # #특정 AI 로그 목록 보기
 # @app.get("/ailogs/ai/{aiid}", response_model=schemas.AILogTableListOut)
