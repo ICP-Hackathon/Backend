@@ -82,6 +82,22 @@ def get_user_ais(db: Session, user_address : str):
 def get_ais_by_weekly_users(db: Session, offset: int, limit : int):
     return db.query(models.AITable).order_by(models.AITable.weekly_users.desc()).offset(offset).limit(limit - offset).all()
 
+def get_today_ais(db: Session):
+    results = db.query(models.AITable, models.UserTable).join(models.UserTable, models.AITable.creator_address == models.UserTable.user_address).order_by(models.AITable.created_at.desc()).limit(4).all()
+    ais = []
+    for ait, user in results:
+        ai_out = schemas.AITableOut(
+            creator_address=ait.creator_address,
+            name=ait.name,
+            image_url=ait.image_url,
+            category=ait.category,
+            introductions=ait.introductions,
+            nickname=user.nickname     # From UserTable
+        )
+        ais.append(ai_out)  
+    return ais
+
+
 def get_category_ais_by_weekly_users(db: Session, offset: int, limit : int, category:str):
     return db.query(models.AITable).filter(models.AITable.category == category).order_by(models.AITable.weekly_users.desc()).offset(offset).limit(limit - offset).all()
 

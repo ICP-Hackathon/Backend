@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import List
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
+import requests
 from sqlalchemy.orm import Session
 
 from DB import crud, models, schemas
@@ -31,6 +32,9 @@ app.add_middleware(
     allow_headers=["*"],  # 허용할 헤더
 )
 
+BASE_URL = "http://localhost:8080"
+RAGCOON_STAGE_ID = "0xfc4a68b3863a1a1104981e874c2e03718179a9d6e78034f2cdb476609084d189"
+headers = {"Content-Type": "application/json"}
 
 
 # 종속성 만들기: 요청 당 독립적인 데이터베이스 세션/연결이 필요하고 요청이 완료되면 닫음
@@ -57,7 +61,39 @@ def get_user(user_address : str, db: Session = Depends(get_db)):
     return crud.get_user(db, user_address=user_address)
 
 @app.post("/add_user/", response_model=schemas.UserTableBase)
-def add_user(user: schemas.UserTableBase, db: Session = Depends(get_db)):
+def add_user(user: schemas.UserTableCreate, db: Session = Depends(get_db)):
+    creator_url = BASE_URL + "/movecall/add_creator"
+    consumer_url = BASE_URL + "/movecall/add_consumer"
+    creator_params = {
+        "ragcoonStageId": RAGCOON_STAGE_ID,
+        "creatorAddress": user.user_address,
+    }
+    consumer_paramse = {
+        "ragcoonStageId": RAGCOON_STAGE_ID,
+        "consumerAddress": user.user_address,
+    }
+    # Make the POST request to another API with the received data
+    creator_response = requests.get(creator_url, params=creator_params, headers=headers).json()
+    consumer_response = requests.get(consumer_url, params=consumer_paramse, headers=headers).json()
+
+    print("Creator Response")
+    print(creator_response)
+    
+    print("Consumer Response")
+    print(consumer_response)
+
+    userDB = schemas.UserTableBase(
+        user_address = user.user_address,
+        nickname = user.nickname,
+        image_url = user.image_url,
+        gender = user.gender,
+        country = user.country,
+        phone= user.phone,
+        creator_id = creator_response.get(''),
+        consumer_id = consumer_response.get('')
+    )
+
+
     return crud.add_user(db, user = user)
 
 
@@ -89,6 +125,11 @@ def get_trend_ais(category : str, offset : int, limit : int, db: Session = Depen
     else:
         res = crud.get_category_ais_by_weekly_users(db=db, offset=offset, limit=limit, category=category)
         return schemas.AITableListOut(ais=res)
+
+@app.get("/today_ais", response_model=schemas.AITableListOut)
+def get_today_ais(db: Session = Depends(get_db)):
+    res =  crud.get_today_ais(db=db)
+    return schemas.AITableListOut(ais=res)  
     
 
 @app.get("/search_ais/{ai_name}", response_model=schemas.AISearchListOut)
@@ -108,6 +149,8 @@ def search_ai(ai_name: str, db: Session = Depends(get_db)):
 
 @app.post("/create_ai/", response_model=schemas.AITableBase)
 def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
+    url = BASE_URL + "/movecall/add_blob_id"  # The URL of the REST API you want to call
+
     ai_id = ai.creator_address + '_' + ai.name
 
 
@@ -115,6 +158,10 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     db_ai = crud.get_ai(db, ai_id=ai_id)
     if db_ai:
         raise HTTPException(status_code=400, detail="AI with this ID already exists")
+
+    db_user = crud.get_user(db, user_address=ai.creator_address)
+    if not db_user:
+        raise HTTPException(status_code=400, detail="You are not user")
     
     faiss_id = ai.name + "tx" + str(random.random())
     # AI 콘텐츠를 추가하는 로직
@@ -124,15 +171,23 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     if 'newlyCreated' in res :
         blob_id = res['newlyCreated']['blobObject']['blobId']
     elif 'alreadyCertified' in res :
-        blob_id = res['alreadyCertified']['blobId']
-
-    
+        blob_id = res['alreadyCertified']['blobId']    
+    # Extract necessary data from the request (example)
+    params = {
+        "ragcoonStageId": RAGCOON_STAGE_ID,
+        "creatorID": "0xecf8ca3938ee5f35bd670c73901d1bb4f52afa11102c2663ec39893047ba4a52",
+        "AIID" : ai_id,
+        "blobID" : blob_id
+    }
+    # Make the POST request to another API with the received data
+    response = requests.get(url, params=params, headers=headers).json()
+    digest = (response.get('digest'))
 
 
     aiDB = schemas.AITableBase(
         ai_id = ai_id,
         creator_address =  ai.creator_address,
-        created_at = ctime(),
+        created_at = datetime.now(),
         name = ai.name,
         image_url = ai.image_url,
         category = ai.category,
@@ -151,7 +206,7 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
         ai_id = ai_id,
         created_at = ctime(),
         comments =ai.comments,
-        tx_url= faiss_id,
+        tx_url= digest,
         faissid = faiss_id
     )
     crud.create_rag(db=db, rag=rag)
@@ -171,13 +226,31 @@ def update_ai(ai_update: schemas.AITableUserUpdateInput, db: Session = Depends(g
     if ai_update.contents != "":
         faiss_id = db_ai.name + "tx" + str(random.random())
         embed = add_text([ai_update.contents], [{"source" : db_ai.ai_id}], [faiss_id])
+        res = send_data(str(embed))
+        blob_id = ''
+        if 'newlyCreated' in res :
+            blob_id = res['newlyCreated']['blobObject']['blobId']
+        elif 'alreadyCertified' in res :
+            blob_id = res['alreadyCertified']['blobId']
+
+        url = BASE_URL + "/movecall/add_blob_id"  # The URL of the REST API you want to call
+        headers = {"Content-Type": "application/json"}
+        params = {
+            "ragcoonStageId": "0x6cf0caaed681c010a3466a6c0c9ea6169b114c25ad708193f2dec506b1a35b70",
+            "creatorID": "db",
+            "AIID" : db_ai.ai_id,
+            "blobID" : blob_id
+        }
+        # Make the POST request to another API with the received data
+        response = requests.get(url, params=params, headers=headers).json()
+        digest = (response.get('digest'))
             
         # AILog 테이블에 로그 기록
         rag = schemas.RAGTableCreate(
             ai_id = ai_update.ai_id,
             created_at = ctime(),
             comments =ai_update.comments,
-            tx_url= faiss_id,
+            tx_url= digest,
             faissid = faiss_id
         )
 

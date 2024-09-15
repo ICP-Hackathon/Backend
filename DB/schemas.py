@@ -3,7 +3,8 @@ from typing import List, Optional
 from datetime import time, datetime
 
 # UserTable 스키마
-class UserTableBase(BaseModel):
+
+class UserTableCreate(BaseModel):
     user_address: str
     nickname: Optional[str] = '0.0'
     image_url: Optional[str] = None
@@ -11,11 +12,22 @@ class UserTableBase(BaseModel):
     country: Optional[str] = None
     phone: Optional[str] = None
 
+
+class UserTableBase(BaseModel):
+    user_address: str
+    nickname: Optional[str] = '0.0'
+    image_url: Optional[str] = None
+    gender: Optional[str] = None
+    country: Optional[str] = None
+    phone: Optional[str] = None
+    creator_id: Optional[str] = None
+    consumer_id: Optional[str] = None
+
 # AITable 스키마
 class AITableBase(BaseModel):
     ai_id: str
     creator_address: Optional[str] = None
-    created_at: Optional[str] = None
+    created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
     name: Optional[str] = None
     image_url: Optional[str] = None
     category: Optional[str] = None
@@ -36,6 +48,16 @@ class AITableCreate(BaseModel):
     introductions: Optional[str] = None
     contents: Optional[str] = None
     comments: Optional[str] = None
+
+class AITableOut(BaseModel):
+    creator_address: Optional[str] = None
+    name: Optional[str] = None
+    image_url: Optional[str] = None
+    category: Optional[str] = None
+    introductions: Optional[str] = None
+    nickname: Optional[str] = '0.0'
+    class Config:
+        from_attributes = True
 
 class AITableUserUpdateInput(BaseModel):
     ai_id : Optional[str] = None
@@ -59,10 +81,17 @@ class AITableUsageUpdate(BaseModel):
     completion_tokens : Optional[float] = None
     weekly_users : Optional[int] = None
 
+
 class AITableListOut(BaseModel):
-    ais: List[AITableBase]
+    ais: List[AITableOut]
     class Config:
         from_attributes = True
+
+
+# class AITableListOut(BaseModel):
+#     ais: List[AITableBase]
+#     class Config:
+#         from_attributes = True
 
 class AISearch(BaseModel):
     name: Optional[str] = None

@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Time, Text, Float, func
+from sqlalchemy import Column, Integer, String, Time, Text, Float, func, DateTime
+from datetime import datetime
 from DB.database import Base
 
 class UserTable(Base):
@@ -10,13 +11,15 @@ class UserTable(Base):
     gender = Column(String, nullable=True)
     country = Column(String, nullable=True)
     phone = Column(String, nullable=True)
+    creator_id = Column(String, nullable=True)
+    consumer_id = Column(String, nullable=True)
 
 class AITable(Base):
     __tablename__ = "aitable"
 
     ai_id = Column(String, nullable=False, primary_key=True)
     creator_address = Column(String, nullable=True)
-    created_at = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=True)  # Use DateTime instead of String
     name = Column(String, nullable=True)
     image_url = Column(String, nullable=True)
     category = Column(String, nullable=True)
