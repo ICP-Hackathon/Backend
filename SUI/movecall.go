@@ -107,7 +107,12 @@ func AddBlob(ragcoonStageId string, creatorAddress string, AIID string, blobID s
 	return res
 }
 
-func PayUsage(ragcoonStageId string, creatorAddress string, AIID string, consumerAddress string, amount uint64) *models.SuiTransactionBlockResponse {
+func PayUsage(ragcoonStageId string, creatorAddress string, AIID string, consumerAddress string, amount string) *models.SuiTransactionBlockResponse {
 	res := MoveCall("pay_usage", []interface{}{}, []interface{}{ragcoonStageId, creatorAddress, AIID, consumerAddress, amount})
+	return res
+}
+
+func AddRecharge(ragcoonStageId string, consumerAddress string, coinObjectId string) *models.SuiTransactionBlockResponse {
+	res := MoveCall("add_recharge", []interface{}{}, []interface{}{ragcoonStageId, consumerAddress, coinObjectId})
 	return res
 }

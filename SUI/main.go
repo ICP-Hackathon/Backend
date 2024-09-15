@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 )
 
 func main() {
@@ -61,9 +60,18 @@ func main() {
 		creatorAddress := r.URL.Query().Get("creatorAddress")
 		AIID := r.URL.Query().Get("AIID")
 		consumerAddress := r.URL.Query().Get("consumerAddress")
-		amount_str := r.URL.Query().Get("amount")
-		amount, _ := strconv.ParseUint(amount_str, 10, 64)
+		amount := r.URL.Query().Get("amount")
 		res := PayUsage(ragcoonStageId, creatorAddress, AIID, consumerAddress, amount)
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(res)
+	})
+
+	http.HandleFunc("/movecall/add_recharge", func(w http.ResponseWriter, r *http.Request) {
+		ragcoonStageId := r.URL.Query().Get("ragcoonStageId")
+		consumerAddress := r.URL.Query().Get("consumerAddress")
+		coinObjectId := r.URL.Query().Get("coinObjectId")
+		res := AddRecharge(ragcoonStageId, consumerAddress, coinObjectId)
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(res)
