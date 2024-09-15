@@ -11,8 +11,6 @@ class UserTable(Base):
     gender = Column(String, nullable=True)
     country = Column(String, nullable=True)
     phone = Column(String, nullable=True)
-    creator_id = Column(String, nullable=True)
-    consumer_id = Column(String, nullable=True)
 
 class AITable(Base):
     __tablename__ = "aitable"

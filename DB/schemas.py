@@ -20,8 +20,6 @@ class UserTableBase(BaseModel):
     gender: Optional[str] = None
     country: Optional[str] = None
     phone: Optional[str] = None
-    creator_id: Optional[str] = None
-    consumer_id: Optional[str] = None
 
 # AITable 스키마
 class AITableBase(BaseModel):
