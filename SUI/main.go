@@ -37,9 +37,9 @@ func main() {
 
 	http.HandleFunc("/movecall/add_ai", func(w http.ResponseWriter, r *http.Request) {
 		ragcoonStageId := r.URL.Query().Get("ragcoonStageId")
-		creatorID := r.URL.Query().Get("creatorID")
+		creatorAddress := r.URL.Query().Get("creatorAddress")
 		AIID := r.URL.Query().Get("AIID")
-		res := AddAI(ragcoonStageId, creatorID, AIID)
+		res := AddAI(ragcoonStageId, creatorAddress, AIID)
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(res)
@@ -47,10 +47,10 @@ func main() {
 
 	http.HandleFunc("/movecall/add_blob_id", func(w http.ResponseWriter, r *http.Request) {
 		ragcoonStageId := r.URL.Query().Get("ragcoonStageId")
-		creatorID := r.URL.Query().Get("creatorID")
+		creatorAddress := r.URL.Query().Get("creatorAddress")
 		AIID := r.URL.Query().Get("AIID")
 		blobID := r.URL.Query().Get("blobID")
-		res := AddBlob(ragcoonStageId, creatorID, AIID, blobID)
+		res := AddBlob(ragcoonStageId, creatorAddress, AIID, blobID)
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(res)
@@ -58,12 +58,12 @@ func main() {
 
 	http.HandleFunc("/movecall/pay_usage", func(w http.ResponseWriter, r *http.Request) {
 		ragcoonStageId := r.URL.Query().Get("ragcoonStageId")
-		creatorID := r.URL.Query().Get("creatorID")
+		creatorAddress := r.URL.Query().Get("creatorAddress")
 		AIID := r.URL.Query().Get("AIID")
-		consumerID := r.URL.Query().Get("consumerID")
+		consumerAddress := r.URL.Query().Get("consumerAddress")
 		amount_str := r.URL.Query().Get("amount")
 		amount, _ := strconv.ParseUint(amount_str, 10, 64)
-		res := PayUsage(ragcoonStageId, creatorID, AIID, consumerID, amount)
+		res := PayUsage(ragcoonStageId, creatorAddress, AIID, consumerAddress, amount)
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(res)
