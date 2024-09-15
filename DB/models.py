@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Time, Text, Float, func
+from sqlalchemy import Column, Integer, String, Time, Text, Float, func, DateTime
+from datetime import datetime
 from DB.database import Base
 
 class UserTable(Base):
@@ -16,7 +17,7 @@ class AITable(Base):
 
     ai_id = Column(String, nullable=False, primary_key=True)
     creator_address = Column(String, nullable=True)
-    created_at = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.now(), nullable=True)  # Use DateTime instead of String
     name = Column(String, nullable=True)
     image_url = Column(String, nullable=True)
     category = Column(String, nullable=True)
@@ -31,7 +32,7 @@ class RAGTable(Base):
 
     rag_id = Column(Integer, primary_key=True, autoincrement=True)
     ai_id = Column(String, primary_key=True, nullable=False)
-    created_at = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.now(), nullable=True)  # Use DateTime instead of String
     comments = Column(Text, nullable=True)
     tx_url = Column(String, nullable=True)
     faiss_id = Column(String, nullable=True)
@@ -48,6 +49,6 @@ class ChatContentsTable(Base):
 
     chat_contents_id = Column(String, nullable=False, primary_key=True)
     chat_id = Column(String, nullable=True)
-    created_at = Column(String, nullable=True, default=func.now())
+    created_at = Column(DateTime, default=datetime.now(), nullable=True)  # Use DateTime instead of String
     sender_id = Column(String, nullable=True)
     message = Column(Text, nullable=True)

@@ -3,6 +3,16 @@ from typing import List, Optional
 from datetime import time, datetime
 
 # UserTable 스키마
+
+class UserTableCreate(BaseModel):
+    user_address: str
+    nickname: Optional[str] = '0.0'
+    image_url: Optional[str] = None
+    gender: Optional[str] = None
+    country: Optional[str] = None
+    phone: Optional[str] = None
+
+
 class UserTableBase(BaseModel):
     user_address: str
     nickname: Optional[str] = '0.0'
@@ -15,7 +25,7 @@ class UserTableBase(BaseModel):
 class AITableBase(BaseModel):
     ai_id: str
     creator_address: Optional[str] = None
-    created_at: Optional[str] = None
+    created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
     name: Optional[str] = None
     image_url: Optional[str] = None
     category: Optional[str] = None
@@ -36,6 +46,11 @@ class AITableCreate(BaseModel):
     introductions: Optional[str] = None
     contents: Optional[str] = None
     comments: Optional[str] = None
+
+class AITableOut(AITableBase):
+    creator: Optional[str] = None
+    class Config:
+        from_attributes = True
 
 class AITableUserUpdateInput(BaseModel):
     ai_id : Optional[str] = None
@@ -59,10 +74,17 @@ class AITableUsageUpdate(BaseModel):
     completion_tokens : Optional[float] = None
     weekly_users : Optional[int] = None
 
+
 class AITableListOut(BaseModel):
-    ais: List[AITableBase]
+    ais: List[AITableOut]
     class Config:
         from_attributes = True
+
+
+# class AITableListOut(BaseModel):
+#     ais: List[AITableBase]
+#     class Config:
+#         from_attributes = True
 
 class AISearch(BaseModel):
     name: Optional[str] = None
@@ -80,7 +102,7 @@ class AISearchListOut(BaseModel):
 class RAGTableBase(BaseModel):
     rag_id: int
     ai_id: Optional[str] = None
-    created_at: Optional[str] = None
+    created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
     comments: Optional[str] = None
     tx_url: Optional[str] = None
     faiss_id: Optional[str] = None
@@ -91,7 +113,7 @@ class RAGTableBase(BaseModel):
 
 class RAGTableCreate(BaseModel):
     ai_id: Optional[str] = None
-    created_at: Optional[str] = None
+    created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
     comments: Optional[str] = None
     tx_url: Optional[str] = None
     faiss_id: Optional[str] = None
@@ -105,7 +127,7 @@ class RAGTableListOut(BaseModel):
 class AIDetail(BaseModel):
     ai_id: str
     creator_address: Optional[str] = None
-    created_at: Optional[str] = None
+    created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
     name: Optional[str] = None
     image_url: Optional[str] = None
     category: Optional[str] = None
@@ -128,12 +150,20 @@ class ChatTableBase(BaseModel):
     class Config:
         from_attributes = True
 
+class ChatTableOut(AITableBase):
+    chat_id: str
+    ai_id: Optional[str] = None
+    user_address: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
 class ChatTableCreate(BaseModel):
     ai_id: Optional[str] = None
     user_address: Optional[str] = None
 
 class ChatTableListOut(BaseModel):
-    chats: List[ChatTableBase]
+    chats: List[ChatTableOut]
 
     class Config:
         from_attributes = True
@@ -142,7 +172,7 @@ class ChatTableListOut(BaseModel):
 class ChatContentsTableBase(BaseModel):
     chat_contents_id: str
     chat_id: Optional[str] = None
-    created_at: Optional[str] = None
+    created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
     sender_id: Optional[str] = None
     message: Optional[str] = None
     class Config:
