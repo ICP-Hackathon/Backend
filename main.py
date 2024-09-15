@@ -15,7 +15,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from Walrus import walrus
 from SUI import suiapi
 
-
 import random
 from time import ctime
 
@@ -51,71 +50,34 @@ def read_root():
     return {"Hello": "World"}
 
 ########################### 유저 관련 API ###########################
+@app.get("/users/{offset}/{limit}", response_model=List[schemas.UserTableBase])
+def get_users(offset : int, limit : int, db: Session = Depends(get_db)):
+    return crud.get_users(db=db, offset=offset, limit=limit)
 
-@app.get("/check_user/{user_address}", response_model=bool)
-def check_user(user_address : str, db: Session = Depends(get_db)):
-    res = crud.check_user(db = db, user_address=user_address)
-    return res
-
-@app.get("/get_user/{user_address}", response_model=schemas.UserTableBase)
+@app.get("/users/{user_address}", response_model=schemas.UserTableBase)
 def get_user(user_address : str, db: Session = Depends(get_db)):
     return crud.get_user(db, user_address=user_address)
 
-@app.post("/add_user/", response_model=schemas.UserTableBase)
+@app.get("/users/exists/{user_address}", response_model=bool)
+def check_user_exists(user_address : str, db: Session = Depends(get_db)):
+    res = crud.check_user_exists(db = db, user_address=user_address)
+    return res
+
+@app.post("/users", response_model=schemas.UserTableBase)
 def add_user(user: schemas.UserTableCreate, db: Session = Depends(get_db)):
-    creator_url = BASE_URL + "/movecall/add_creator"
-    consumer_url = BASE_URL + "/movecall/add_consumer"
-    creator_params = {
-        "ragcoonStageId": RAGCOON_STAGE_ID,
-        "creatorAddress": user.user_address,
-    }
-    consumer_paramse = {
-        "ragcoonStageId": RAGCOON_STAGE_ID,
-        "consumerAddress": user.user_address,
-    }
-    # Make the POST request to another API with the received data
-    creator_response = requests.get(creator_url, params=creator_params, headers=headers).json()
-    consumer_response = requests.get(consumer_url, params=consumer_paramse, headers=headers).json()
-
-    print("Creator Response")
-    print(creator_response)
-    
-    print("Consumer Response")
-    print(consumer_response)
-
-    userDB = schemas.UserTableBase(
-        user_address = user.user_address,
-        nickname = user.nickname,
-        image_url = user.image_url,
-        gender = user.gender,
-        country = user.country,
-        phone= user.phone,
-        creator_id = creator_response.get(''),
-        consumer_id = consumer_response.get('')
-    )
-
-
+    suiapi.add_user_creator_consumser(user.user_address)
     return crud.add_user(db, user = user)
 
-
-# 사용자 정보 업데이트
-# @app.put("/update_user", response_model=schemas.UserTableBase)
-# def update_user(user_update: schemas.UserTableUpdate, db: Session = Depends(get_db)):
-#     updated_user = crud.update_user(db=db, user_update=user_update)
-#     if not updated_user:
-#         raise HTTPException(status_code=404, detail="User not found")
-#     return updated_user
-
-# 사용자 삭제
-# @app.delete("/user/{userid}", response_model=schemas.UserTableOut)
-# def delete_user(userid: str, db: Session = Depends(get_db)):
-#     deleted_user = crud.delete_user(db=db, userid=userid)
-#     if not deleted_user:
-#         raise HTTPException(status_code=404, detail="User not found")
-#     return deleted_user
+# @app.put("/users", response_model=schemas.UserTableBase)
+# def update_user(user: schemas.UserTableCreate, db: Session = Depends(get_db)):
+#     return crud.update_user(db, user = user)
 
 
-########################### AI 관련 API ###########################
+
+
+
+
+
 
 #인기있는 AI 보기
 @app.get("/get_trend_ais/{category}/{offset}/{limit}", response_model=schemas.AITableListOut)

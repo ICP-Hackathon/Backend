@@ -2,16 +2,18 @@ from sqlalchemy.orm import Session
 from . import models, schemas
 
 # UserTable CRUD functions
+def get_users(db: Session, offset: int, limit: int):
+    return db.query(models.UserTable).offset(offset).limit(limit - offset).all()
 
-def check_user(db: Session, user_address: str):
+def get_user(db: Session, user_address: str):
+    return db.query(models.UserTable).filter(models.UserTable.user_address == user_address).first()
+
+def check_user_exists(db: Session, user_address: str):
     res =  db.query(models.UserTable).filter(models.UserTable.user_address == user_address).first()
     if res:
         return True
     else:
         return False
-
-def get_user(db: Session, user_address: str):
-    return db.query(models.UserTable).filter(models.UserTable.user_address == user_address).first()
 
 def add_user(db: Session, user: schemas.UserTableBase):
     db_user = models.UserTable(**user.model_dump())
@@ -20,7 +22,7 @@ def add_user(db: Session, user: schemas.UserTableBase):
     db.refresh(db_user)
     return db_user
 
-# def update_user(db: Session, userid: str, user_update: schemas.UserTableUpdate):
+# def update_user(db: Session, userid: str, user_update: schemas.UserTableBase):
 #     db_user = get_user(db, userid)
 #     if db_user:
 #         for key, value in user_update.model_dump(exclude_unset=True).items():
