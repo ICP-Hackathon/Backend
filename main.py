@@ -95,6 +95,35 @@ def get_rags(ai_id: str, db: Session = Depends(get_db)):
     res = crud.get_rags(db=db, ai_id=ai_id)
     return schemas.RAGTableListOut(logs=res)
 
+#인기있는 AI 보기
+@app.get("/ais/trend/{category}/{offset}/{limit}", response_model=schemas.AITableListOut)
+def get_trend_ais(category : str, offset : int, limit : int, db: Session = Depends(get_db), ):
+    if category == "all":
+        res =  crud.get_ais_by_weekly_users(db=db, offset=offset, limit=limit)
+        return schemas.AITableListOut(ais=res)
+    else:
+        res = crud.get_category_ais_by_weekly_users(db=db, offset=offset, limit=limit, category=category)
+        return schemas.AITableListOut(ais=res)
+
+@app.get("/ais/today", response_model=schemas.AITableListOut)
+def get_today_ais(db: Session = Depends(get_db)):
+    res =  crud.get_today_ais(db=db)
+    return schemas.AITableListOut(ais=res)  
+
+@app.get("/ais/search/{ai_name}", response_model=schemas.AISearchListOut)
+def search_ai(ai_name: str, db: Session = Depends(get_db)):
+    db_ai = crud.search_ai(db, name=ai_name)
+    if not db_ai:
+        raise HTTPException(status_code=404, detail="AI not found")
+    search_results = [
+        schemas.AISearch(
+            name=ai.name,
+            creator_address=ai.creator_address,
+            image_url=ai.image_url
+        ) for ai in db_ai
+    ]
+    return schemas.AISearchListOut(ais=search_results)
+
 @app.post("/ais", response_model=schemas.AITableBase)
 def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     ai_id = ai.creator_address + '_' + ai.name
@@ -164,35 +193,6 @@ def delete_ai(ai_id: str, user_address: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="AI not found")
     return deleted_ai
 
-#인기있는 AI 보기
-@app.get("/get_trend_ais/{category}/{offset}/{limit}", response_model=schemas.AITableListOut)
-def get_trend_ais(category : str, offset : int, limit : int, db: Session = Depends(get_db), ):
-    if category == "all":
-        res =  crud.get_ais_by_weekly_users(db=db, offset=offset, limit=limit)
-        return schemas.AITableListOut(ais=res)
-    else:
-        res = crud.get_category_ais_by_weekly_users(db=db, offset=offset, limit=limit, category=category)
-        return schemas.AITableListOut(ais=res)
-
-@app.get("/today_ais", response_model=schemas.AITableListOut)
-def get_today_ais(db: Session = Depends(get_db)):
-    res =  crud.get_today_ais(db=db)
-    return schemas.AITableListOut(ais=res)  
-    
-
-@app.get("/search_ais/{ai_name}", response_model=schemas.AISearchListOut)
-def search_ai(ai_name: str, db: Session = Depends(get_db)):
-    db_ai = crud.search_ai(db, name=ai_name)
-    if not db_ai:
-        raise HTTPException(status_code=404, detail="AI not found")
-    search_results = [
-        schemas.AISearch(
-            name=ai.name,
-            creator_address=ai.creator_address,
-            image_url=ai.image_url
-        ) for ai in db_ai
-    ]
-    return schemas.AISearchListOut(ais=search_results)
 
 
 
