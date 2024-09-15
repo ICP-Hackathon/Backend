@@ -1,9 +1,15 @@
 import faiss
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
+import os
 from dotenv import load_dotenv
 
+# Load the environment variables from the .env file
 load_dotenv()
+# Load the OpenAI API key from the environment variables
+
+# Initialize the OpenAIEmbeddings class with the loaded API key
+embeddings = OpenAIEmbeddings()
 
 class FAISSDatabase:
     def __init__(self, folder_path, index_name, embeddings):
@@ -25,4 +31,4 @@ class FAISSDatabase:
 
 # Usage example:
 # Initialize the FAISSDatabase class
-faiss = FAISSDatabase(folder_path="faiss_db", index_name="faiss_index", embeddings=OpenAIEmbeddings())
+faiss = FAISSDatabase(folder_path="faiss_db", index_name="faiss_index", embeddings=embeddings)

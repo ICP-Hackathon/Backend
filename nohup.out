@@ -1,0 +1,71 @@
+INFO:     Will watch for changes in these directories: ['/ragcoon/Backend']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [42910] using WatchFiles
+INFO:     Started server process [42912]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [42912]
+INFO:     Stopping reloader process [42910]
+INFO:     Will watch for changes in these directories: ['/ragcoon/Backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [57345] using WatchFiles
+INFO:     Started server process [57347]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Stopping reloader process [57345]
+INFO:     Will watch for changes in these directories: ['/ragcoon/Backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [57380] using WatchFiles
+INFO:     Started server process [57383]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     172.31.42.248:54006 - "GET / HTTP/1.1" 200 OK
+INFO:     172.31.9.172:31478 - "GET / HTTP/1.1" 200 OK
+INFO:     172.31.9.172:31488 - "GET /ai/top10/ HTTP/1.1" 200 OK
+INFO:     172.31.9.172:31488 - "OPTIONS /login/ HTTP/1.1" 400 Bad Request
+INFO:     172.31.9.172:30896 - "OPTIONS /login/ HTTP/1.1" 400 Bad Request
+INFO:     172.31.42.248:31036 - "GET / HTTP/1.1" 200 OK
+INFO:     172.31.9.172:49356 - "GET / HTTP/1.1" 200 OK
+INFO:     Will watch for changes in these directories: ['/ragcoon/Backend']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [58038] using WatchFiles
+INFO:     Started server process [58040]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [58040]
+INFO:     Stopping reloader process [58038]
+INFO:     Will watch for changes in these directories: ['/ragcoon/Backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [58212] using WatchFiles
+INFO:     Started server process [58214]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     172.31.42.248:5792 - "GET / HTTP/1.1" 200 OK
+INFO:     172.31.9.172:12226 - "GET /ai/top10/ HTTP/1.1" 200 OK
+INFO:     172.31.9.172:12230 - "GET / HTTP/1.1" 200 OK
+INFO:     172.31.9.172:12226 - "POST /login/ HTTP/1.1" 200 OK
+INFO:     172.31.9.172:12226 - "GET /ai/top10/ HTTP/1.1" 200 OK
+INFO:     172.31.9.172:12226 - "GET /ai/top10/ HTTP/1.1" 200 OK
+INFO:     172.31.9.172:12226 - "GET /chats/0x24c2060A2CDDd8b2e6509153Fb79B52168A4e074 HTTP/1.1" 200 OK
+INFO:     172.31.9.172:12226 - "GET /ai/0x24c2060A2CDDd8b2e6509153Fb79B52168A4e074_Test HTTP/1.1" 404 Not Found
+INFO:     172.31.9.172:17614 - "GET /ai/0x7Eee0047dd9b015F37C42D2630e1C5B10983932a_NextMentor HTTP/1.1" 200 OK
+INFO:     172.31.9.172:12226 - "GET /ai/0x4184FfDa7dDfBc5c55856996bDE74939283975Bf_NearGuide HTTP/1.1" 200 OK
+INFO:     172.31.9.172:17628 - "GET /ai/0x4184FfDa7dDfBc5c55856996bDE74939283975Bf_BlockBlockGuide HTTP/1.1" 200 OK
+INFO:     172.31.9.172:17628 - "GET /ai/myais/0x24c2060A2CDDd8b2e6509153Fb79B52168A4e074 HTTP/1.1" 200 OK
+INFO:     172.31.42.248:54008 - "GET / HTTP/1.1" 200 OK
+INFO:     172.31.9.172:26768 - "GET / HTTP/1.1" 200 OK
+INFO:     172.31.42.248:64632 - "GET / HTTP/1.1" 200 OK
+INFO:     172.31.9.172:59836 - "GET / HTTP/1.1" 200 OK
+INFO:     172.31.42.248:5882 - "GET / HTTP/1.1" 200 OK
+INFO:     172.31.9.172:38914 - "GET / HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [58214]
+INFO:     Stopping reloader process [58212]

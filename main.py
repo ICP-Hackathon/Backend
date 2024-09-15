@@ -24,7 +24,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # 허용할 클라이언트의 도메인
+    allow_origins=["http://localhost:3000", "http://localhost:5000", 'https://nearanddear.ysblockblock.com'],  # 허용할 클라이언트의 도메인
     allow_credentials=True,
     allow_methods=["*"],  # 허용할 HTTP 메서드 (GET, POST, OPTIONS 등)
     allow_headers=["*"],  # 허용할 헤더
@@ -315,8 +315,7 @@ def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat
 @app.get("/chatcontents/{chat_id}", response_model=schemas.ChatContentsTableListOut)
 def read_chat_content(chat_id: str, db: Session = Depends(get_db)):
     db_chat_content = crud.get_chat_contents(db, chat_id=chat_id)
-    if not db_chat_content:
-        raise HTTPException(status_code=404, detail="Chat content not found")
+
     return schemas.ChatContentsTableListOut(chats=db_chat_content)
 
 # ## COLLECT MONEY

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import time
+from datetime import time, datetime
 
 # UserTable 스키마
 class UserTableBase(BaseModel):
