@@ -1,8 +1,6 @@
-from datetime import datetime
 from typing import List
 
 from fastapi import Depends, FastAPI, HTTPException, Request
-import requests
 from sqlalchemy.orm import Session
 
 from DB import users, ais, chats, models, schemas
