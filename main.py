@@ -404,6 +404,16 @@ def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat
         message =  answer,
     )
 
+    url = BASE_URL + "/movecall/pay_usage"  # The URL of the REST API you want to call
+    params = {
+        "ragcoonStageId": RAGCOON_STAGE_ID,
+        "creatorAddress": db_ai.creator_address,
+        "AIID" : db_ai.ai_id,
+        "consumerAddress": db_ai.creator_address,
+        "amount" : token.prompt_tokens
+    }
+    response = requests.get(url, params=params, headers=headers).json()
+
     return crud.create_chat_content(db=db, chat_content=answerContentsTable)
 
 # # 특정 채팅 내용 읽기
