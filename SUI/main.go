@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 )
 
 func main() {
@@ -61,8 +60,8 @@ func main() {
 		creatorAddress := r.URL.Query().Get("creatorAddress")
 		AIID := r.URL.Query().Get("AIID")
 		consumerAddress := r.URL.Query().Get("consumerAddress")
-		amount_str := r.URL.Query().Get("amount")
-		amount, _ := strconv.ParseUint(amount_str, 10, 64)
+		// amount_str := r.URL.Query().Get("amount")
+		amount := r.URL.Query().Get("amount")
 		res := PayUsage(ragcoonStageId, creatorAddress, AIID, consumerAddress, amount)
 
 		w.Header().Set("Content-Type", "application/json")
