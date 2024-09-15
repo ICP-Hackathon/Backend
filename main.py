@@ -33,7 +33,7 @@ app.add_middleware(
 )
 
 BASE_URL = "http://localhost:8080"
-RAGCOON_STAGE_ID = "0xfc4a68b3863a1a1104981e874c2e03718179a9d6e78034f2cdb476609084d189"
+RAGCOON_STAGE_ID = "0x68e7482eb88d2bfe57481a8078ed447bc50c00f7487d9484bc00b9e49c0c7986"
 headers = {"Content-Type": "application/json"}
 
 
@@ -149,7 +149,8 @@ def search_ai(ai_name: str, db: Session = Depends(get_db)):
 
 @app.post("/create_ai/", response_model=schemas.AITableBase)
 def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
-    url = BASE_URL + "/movecall/add_blob_id"  # The URL of the REST API you want to call
+    add_ai_url = BASE_URL + "/movecall/add_ai"  # The URL of the REST API you want to call
+    add_blob_url = BASE_URL + "/movecall/add_blob_id"  # The URL of the REST API you want to call
 
     ai_id = ai.creator_address + '_' + ai.name
 
@@ -164,6 +165,7 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="You are not user")
     
     faiss_id = ai.name + "tx" + str(random.random())
+
     # AI 콘텐츠를 추가하는 로직
     embed = add_text([ai.contents], [{"source" : ai_id}], [faiss_id])
     res = send_data(str(embed))
@@ -173,15 +175,25 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     elif 'alreadyCertified' in res :
         blob_id = res['alreadyCertified']['blobId']    
     # Extract necessary data from the request (example)
-    params = {
+
+    add_ai_params = {
         "ragcoonStageId": RAGCOON_STAGE_ID,
-        "creatorID": "0xecf8ca3938ee5f35bd670c73901d1bb4f52afa11102c2663ec39893047ba4a52",
+        "creatorAddress": ai.creator_address,
+        "AIID" : ai_id,
+    }
+
+    response1 = requests.get(add_ai_url, params=add_ai_params, headers=headers).json()
+    # digest1 = response1.get('digest')
+
+    add_blob_params = {
+        "ragcoonStageId": RAGCOON_STAGE_ID,
+        "creatorAddress": ai.creator_address,
         "AIID" : ai_id,
         "blobID" : blob_id
     }
     # Make the POST request to another API with the received data
-    response = requests.get(url, params=params, headers=headers).json()
-    digest = (response.get('digest'))
+    response2 = requests.get(add_blob_url, params=add_blob_params, headers=headers).json()
+    digest = response2.get('digest')
 
 
     aiDB = schemas.AITableBase(
