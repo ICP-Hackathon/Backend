@@ -226,7 +226,7 @@ def read_chat_content(chat_id: str, db: Session = Depends(get_db)):
 # # 챗 생성
 @app.post("/chats", response_model=schemas.ChatTableBase)
 def create_chat(chat: schemas.ChatTableCreate, db: Session = Depends(get_db)):
-    db_ai = chats.get_ai(db, ai_id=chat.ai_id)
+    db_ai = ais.get_ai(db, ai_id=chat.ai_id)
     if not db_ai:
         raise HTTPException(status_code=404, detail="AI not found")
 
@@ -264,7 +264,7 @@ def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat
     chats.create_chat_content(db=db, chat_content=chatContentsTable)
 
     #RAG 답변 생성해서 넣기
-    db_ai = chats.get_ai(db, ai_id=chat_exist.ai_id)
+    db_ai = ais.get_ai(db, ai_id=chat_exist.ai_id)
 
     token, answer = rag_qa(chat_content.message, chat_exist.ai_id)
     # token, answer = rag_qa(chat_content.message, "dating_adivce_ai")
@@ -275,7 +275,7 @@ def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat
         completion_tokens = db_ai.completion_tokens + token.completion_tokens,
     )
     
-    chats.update_usage_ai(db=db, ai_id=chat_exist.ai_id, ai_update=aiUpdateDB)
+    ais.update_usage_ai(db=db, ai_id=chat_exist.ai_id, ai_update=aiUpdateDB)
 
 
     chatcontentsid = "AI_" + chat_id + ctime()
