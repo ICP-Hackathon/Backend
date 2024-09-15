@@ -12,7 +12,8 @@ from AI.crud import add_text, delete_text
 from AI.main import rag_qa
 from fastapi.middleware.cors import CORSMiddleware
 
-from Walrus.main import send_data
+from Walrus import walrus
+from SUI import suiapi
 
 
 import random
@@ -168,7 +169,7 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
 
     # AI 콘텐츠를 추가하는 로직
     embed = add_text([ai.contents], [{"source" : ai_id}], [faiss_id])
-    res = send_data(str(embed))
+    res = walrus.send_data(str(embed))
     blob_id = ''
     if 'newlyCreated' in res :
         blob_id = res['newlyCreated']['blobObject']['blobId']
@@ -237,7 +238,7 @@ def update_ai(ai_update: schemas.AITableUserUpdateInput, db: Session = Depends(g
     if ai_update.contents != "":
         faiss_id = db_ai.name + "tx" + str(random.random())
         embed = add_text([ai_update.contents], [{"source" : db_ai.ai_id}], [faiss_id])
-        res = send_data(str(embed))
+        res = walrus.send_data(str(embed))
 
         blob_id = ''
         if 'newlyCreated' in res :
