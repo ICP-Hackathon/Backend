@@ -193,9 +193,6 @@ def delete_ai(ai_id: str, user_address: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="AI not found")
     return deleted_ai
 
-
-
-
 # #특정 AI 로그 목록 보기
 # @app.get("/ailogs/ai/{aiid}", response_model=schemas.AILogTableListOut)
 # def read_ailog_by_aiid(aiid: str, db: Session = Depends(get_db)):
@@ -204,8 +201,32 @@ def delete_ai(ai_id: str, user_address: str, db: Session = Depends(get_db)):
 #         raise HTTPException(status_code=404, detail="Log not found")
 #     return schemas.AILogTableListOut(logs=db_ailogs)
 
-# # 채팅 생성
-@app.post("/chats/", response_model=schemas.ChatTableBase)
+########################### Chat 관련 API ###########################
+
+# # 유저 채팅 목록 읽기
+@app.get("/chats/{user_address}", response_model=schemas.ChatTableListOut)
+def get_chats(user_address: str, db: Session = Depends(get_db)):
+    db_chat = crud.get_chats(db, user_address=user_address)
+    if not db_chat:
+        raise HTTPException(status_code=404, detail="Chat not found")
+    return schemas.ChatTableListOut(chats=db_chat)
+
+@app.get("/chats/{ai_id}", response_model=schemas.ChatTableListOut)
+def get_chats(ai_id: str, db: Session = Depends(get_db)):
+    db_chat = crud.get_chats(db, ai_id=ai_id)
+    if not db_chat:
+        raise HTTPException(status_code=404, detail="Chat not found")
+    return schemas.ChatTableListOut(chats=db_chat)
+    
+# # 특정 채팅 읽기
+@app.get("/chats/contents/{chat_id}", response_model=schemas.ChatContentsTableListOut)
+def read_chat_content(chat_id: str, db: Session = Depends(get_db)):
+    db_chat_content = crud.get_chat_contents(db, chat_id=chat_id)
+
+    return schemas.ChatContentsTableListOut(chats=db_chat_content)
+
+# # 챗 생성
+@app.post("/chats", response_model=schemas.ChatTableBase)
 def create_chat(chat: schemas.ChatTableCreate, db: Session = Depends(get_db)):
     db_ai = crud.get_ai(db, ai_id=chat.ai_id)
     if not db_ai:
@@ -225,24 +246,9 @@ def create_chat(chat: schemas.ChatTableCreate, db: Session = Depends(get_db)):
 
     return crud.create_chat(db=db, chat=chatTable)
 
-# # 유저 채팅 목록 읽기
-@app.get("/chats/{user_address}", response_model=schemas.ChatTableListOut)
-def read_chat(user_address: str, db: Session = Depends(get_db)):
-    db_chat = crud.get_chats(db, user_address=user_address)
-    if not db_chat:
-        raise HTTPException(status_code=404, detail="Chat not found")
-    return schemas.ChatTableListOut(chats=db_chat)
-
-# # 채팅 삭제
-# @app.delete("/chats/{chat_id}", response_model=schemas.ChatTableBase)
-# def delete_chat(chat_id: str, db: Session = Depends(get_db)):
-#     deleted_chat = crud.delete_chat(db=db, chat_id=chat_id)
-#     if not deleted_chat:
-#         raise HTTPException(status_code=404, detail="Chat not found")
-#     return deleted_chat
 
 # # 채팅 내용 생성
-@app.post("/chatcontent/{chat_id}", response_model=schemas.ChatContentsTableBase)
+@app.post("/chats/contents/{chat_id}", response_model=schemas.ChatContentsTableBase)
 def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat_id :str, db: Session = Depends(get_db)):
     chat_exist = crud.get_chat(db, chat_id=chat_id)
     if not chat_exist:
@@ -283,40 +289,14 @@ def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat
         message =  answer,
     )
 
-    url = BASE_URL + "/movecall/pay_usage"  # The URL of the REST API you want to call
-    params = {
-        "ragcoonStageId": RAGCOON_STAGE_ID,
-        "creatorAddress": db_ai.creator_address,
-        "AIID" : db_ai.ai_id,
-        "consumerAddress": db_ai.creator_address,
-        "amount" : token.prompt_tokens
-    }
-    response = requests.get(url, params=params, headers=headers).json()
+    suiapi.pay_usage(ai=db_ai, tokens=token.prompt_tokens)
 
     return crud.create_chat_content(db=db, chat_content=answerContentsTable)
 
-# # 특정 채팅 내용 읽기
-@app.get("/chatcontents/{chat_id}", response_model=schemas.ChatContentsTableListOut)
-def read_chat_content(chat_id: str, db: Session = Depends(get_db)):
-    db_chat_content = crud.get_chat_contents(db, chat_id=chat_id)
-
-    return schemas.ChatContentsTableListOut(chats=db_chat_content)
-
-# ## COLLECT MONEY
-
-# # AI로 번 돈 받기
-# @app.post("/collect/{aiid}", response_model=schemas.AITableBase)
-# def create_ai(aiid : str, db: Session = Depends(get_db)):
-#     #먼저 만들어졌었는지 확인
-#     print(aiid)
-#     db_ai = crud.get_ai(db, aiid=aiid)
-#     if not db_ai:
-#         raise HTTPException(status_code=400, detail="AI Not exists")
-    
-#     ##블록체인 쏘기
-    
-#     aiUpdateDB = schemas.AITableCollectUpdate(
-#         collect = 0
-#     )
-
-#     return crud.update_usage_ai(db=db, aiid=aiid, ai_update=aiUpdateDB)
+# # 채팅 삭제
+# @app.delete("/chats/{chat_id}", response_model=schemas.ChatTableBase)
+# def delete_chat(chat_id: str, db: Session = Depends(get_db)):
+#     deleted_chat = crud.delete_chat(db=db, chat_id=chat_id)
+#     if not deleted_chat:
+#         raise HTTPException(status_code=404, detail="Chat not found")
+#     return deleted_chat

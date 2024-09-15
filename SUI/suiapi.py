@@ -63,3 +63,13 @@ def add_blob(ai: models.AITable , embed: str):
     digest = response.get('digest')
     return digest
 
+def pay_usage(ai: models.AITable, tokens: int):
+    url = BASE_URL + "/movecall/pay_usage"  # The URL of the REST API you want to call
+    params = {
+        "ragcoonStageId": RAGCOON_STAGE_ID,
+        "creatorAddress": ai.creator_address,
+        "AIID" : ai.ai_id,
+        "consumerAddress": ai.creator_address,
+        "amount" : tokens
+    }
+    response = requests.get(url, params=params, headers=headers).json()

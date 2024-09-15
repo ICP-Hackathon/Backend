@@ -283,6 +283,37 @@ def get_chats(db: Session, user_address: str):
     
     return chats
 
+def get_chats(db: Session, ai_id: str):
+    # Perform the join query and extract the necessary fields
+    results = (
+        db.query(models.ChatTable, models.AITable)
+        .join(models.AITable, models.ChatTable.ai_id == models.AITable.ai_id)  # Explicit join condition
+        .filter(models.ChatTable.ai_id == ai_id)
+        .all()
+    )
+    
+    # Combine the data into a single response format
+    chats = []
+    for chat, ai in results:
+        chat_data = {
+            'chat_id': chat.chat_id,
+            'ai_id': chat.ai_id,
+            'user_address': chat.user_address,
+            'name': ai.name,
+            'category': ai.category,
+            'creator_address': ai.creator_address,
+            'created_at': ai.created_at,
+            'image_url': ai.image_url,
+            'introductions': ai.introductions,
+            'chat_counts': ai.chat_counts,
+            'prompt_tokens': ai.prompt_tokens,
+            'completion_tokens': ai.completion_tokens,
+            'weekly_users': ai.weekly_users,
+        }
+        chats.append(chat_data)
+    
+    return chats
+
 
 def create_chat(db: Session, chat: schemas.ChatTableBase):
     db_chat = models.ChatTable(**chat.model_dump())
