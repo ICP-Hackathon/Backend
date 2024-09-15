@@ -4,46 +4,49 @@ from DB.database import Base
 class UserTable(Base):
     __tablename__ = "usertable"
 
-    userid = Column(String, nullable=False, primary_key=True)
-    name = Column(String, nullable=True)
-    profileimage = Column(String, nullable=True)
+    user_address = Column(String, nullable=False, primary_key=True)
+    nickname = Column(String, nullable=True)
+    gender = Column(String, nullable=True)
+    country = Column(String, nullable=True)
+    phone = Column(String, nullable=True)
 
 class AITable(Base):
     __tablename__ = "aitable"
 
-    id = Column(String, nullable=False, primary_key=True)
+    ai_id = Column(String, nullable=False, primary_key=True)
+    creator_address = Column(String, nullable=True)
+    created_at = Column(String, nullable=True)
     name = Column(String, nullable=True)
-    creator = Column(String, nullable=True)
-    image = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)
     category = Column(String, nullable=True)
     introductions = Column(String, nullable=True)
-    usage = Column(Integer, nullable=True, default=0)
-    total_usage = Column(Integer, nullable=True, default = 0)
-    ratio = Column(Float, nullable=True, default = 0.1)
-    collect = Column(Float, nullable=True, default = 0)
+    chat_counts = Column(Integer, nullable=True)
+    prompt_tokens = Column(Float, nullable=True)
+    completion_tokens = Column(Float, nullable=True)
+    weekly_users = Column(Integer, nullable=True)
 
-class AILogTable(Base):
-    __tablename__ = "ailogtable"
+class RAGTable(Base):
+    __tablename__ = "ragtable"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    aiid = Column(String, primary_key=True, nullable=True)
-    createdat = Column(Time, nullable=True, default=func.now())
-    log = Column(Text, nullable=True)
-    txurl = Column(String, nullable=True)
-    faissid = Column(String, nullable=True)
+    rag_id = Column(Integer, primary_key=True, autoincrement=True)
+    ai_id = Column(String, primary_key=True, nullable=False)
+    created_at = Column(String, nullable=True)
+    comments = Column(Text, nullable=True)
+    tx_url = Column(String, nullable=True)
+    faiss_id = Column(String, nullable=True)
 
 class ChatTable(Base):
     __tablename__ = "chattable"
 
-    chatid = Column(String, nullable=False, primary_key=True)
-    aiid = Column(String, nullable=True)
-    userid = Column(String, nullable=True)
+    chat_id = Column(String, nullable=False, primary_key=True)
+    ai_id = Column(String, nullable=False)
+    user_address = Column(String, nullable=False)
 
 class ChatContentsTable(Base):
     __tablename__ = "chatcontentstable"
 
-    chatcontentsid = Column(String, nullable=False, primary_key=True)
-    chatid = Column(String, nullable=True)
-    createdat = Column(Time, nullable=True, default=func.now())
-    senderid = Column(String, nullable=True)
+    chat_contents_id = Column(String, nullable=False, primary_key=True)
+    chat_id = Column(String, nullable=True)
+    created_at = Column(String, nullable=True, default=func.now())
+    sender_id = Column(String, nullable=True)
     message = Column(Text, nullable=True)
