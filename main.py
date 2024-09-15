@@ -72,11 +72,50 @@ def add_user(user: schemas.UserTableCreate, db: Session = Depends(get_db)):
 # def update_user(user: schemas.UserTableCreate, db: Session = Depends(get_db)):
 #     return crud.update_user(db, user = user)
 
+########################### AI 관련 API ###########################
 
+@app.get("/ais/{offset}/{limit}", response_model=schemas.AITableListOut)
+def get_ais(offset: int, limit: int, db: Session = Depends(get_db)):
+    return crud.get_ais(db=db, offset=offset, limit=limit)
 
+@app.get("/ais/{ai_id}", response_model=schemas.AITableOut)
+def get_ai(ai_id: str, db: Session = Depends(get_db)):
+    return crud.get_ai(db=db, ai_id=ai_id)
 
+@app.get("/ais/{user_address}", response_model=schemas.AITableListOut)
+def get_user_ais(user_address: str, db: Session = Depends(get_db)):
+    return crud.get_user_ais(db=db, user_address=user_address)
 
+@app.get("/ais/{ai_id}/rags", response_model=schemas.RAGTableListOut)
+def get_rags(ai_id: str, db: Session = Depends(get_db)):
+    return get_rags(db=db, ai_id=ai_id)
 
+@app.post("/ais", response_model=schemas.AITableBase)
+def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
+    return create_ai(db=db, ai=ai)
+
+@app.put("/ais", response_model= schemas.AITableOut)
+def update_ais(ai_update: schemas.AITableUserUpdateInput,db: Session = Depends(get_db)):
+    db_ai = crud.get_ai(db, ai_id=ai_update.ai_id)
+    if not db_ai:
+        raise HTTPException(status_code=400, detail="AI Not found")
+    if db_ai.creator_address != ai_update.user_address:
+        raise HTTPException(status_code=400, detail="You are not the owner of AI")
+
+    # AI 콘텐츠가 변경된 경우 add_text 호출
+    if ai_update.contents != "":
+        faiss_id = db_ai.name + "tx" + str(random.random())
+        embed = add_text([ai_update.contents], [{"source" : db_ai.ai_id}], [faiss_id])
+
+        digest = suiapi.add_blob(db_ai=db_ai, embed=embed)
+
+        crud.create_rag(db=db, ai_update=ai_update, digest=digest, faiss_id=faiss_id)
+    
+    return crud.update_ai(db=db, ai_id=ai_update.ai_id, ai_update=ai_update)
+
+@app.delete("/ais/{ai_id}/{user_address}", response_model=schemas.AITableBase)
+def delete_ai(ai_id: str, user_address: str, db: Session = Depends(get_db)):
+    return
 
 
 #인기있는 AI 보기

@@ -1,7 +1,9 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
+from datetime import datetime
 
-# UserTable CRUD functions
+#################### UserTable CRUD functions ###################
+
 def get_users(db: Session, offset: int, limit: int):
     return db.query(models.UserTable).offset(offset).limit(limit - offset).all()
 
@@ -38,9 +40,19 @@ def add_user(db: Session, user: schemas.UserTableBase):
 #         db.commit()
 #     return db_user
 
-# # AITable CRUD functions
+################### AITable CRUD functions ###################
+
+def get_ais(db: Session, offset: int, limit: int):
+    return db.query(models.AITable).offset(offset).limit(limit-offset).all()
+
 def get_ai(db: Session, ai_id: str):
     return db.query(models.AITable).filter(models.AITable.ai_id == ai_id).first()
+
+def get_user_ais(db: Session, user_address : str):
+    return db.query(models.AITable).filter(models.AITable.creator_address == user_address).all()
+
+def get_rags(db: Session, ai_id: str):
+    return db.query(models.RAGTable).filter(models.AITable.ai_id == ai_id).all()
 
 def get_ai_detail(db: Session, ai_id: str) -> schemas.AIDetail:
     # AITable과 RAGTable을 ai_id로 조인
@@ -78,8 +90,6 @@ def get_ai_detail(db: Session, ai_id: str) -> schemas.AIDetail:
     
     return ai_detail
 
-def get_user_ais(db: Session, user_address : str):
-    return db.query(models.AITable).filter(models.AITable.creator_address == user_address).all()
 
 def get_ais_by_weekly_users(db: Session, offset: int, limit : int):
     return db.query(models.AITable).order_by(models.AITable.weekly_users.desc()).offset(offset).limit(limit - offset).all()
@@ -129,10 +139,17 @@ def create_ai(db: Session, ai: schemas.AITableCreate):
     db.refresh(db_ai)
     return db_ai
 
-def update_ai(db: Session, ai_id: str, ai_update: schemas.AITableUpdate):
+def update_ai(db: Session, ai_id: str, ai_update: schemas.AITableUserUpdateInput):
+    aiUpdateDB = schemas.AITableUpdate(
+        name = ai_update.name,
+        image_url = ai_update.image_url,
+        category= ai_update.category,  # 카테고리 필드, None이 기본값
+        introductions=ai_update.introductions  # 소개 필드, None이 기본값
+    )
+    
     db_ai = get_ai(db, ai_id)
     if db_ai:
-        for key, value in ai_update.model_dump(exclude_unset=True).items():
+        for key, value in aiUpdateDB.model_dump(exclude_unset=True).items():
             setattr(db_ai, key, value)
         db.commit()
         db.refresh(db_ai)
@@ -171,7 +188,14 @@ def delete_ai(db: Session, ai_id: str):
 def get_raglogs_by_aiid(db: Session, ai_id: str):
     return db.query(models.RAGTable).filter(models.RAGTable.ai_id == ai_id).all()
 
-def create_rag(db: Session, rag: schemas.RAGTableCreate):
+def create_rag(db: Session, ai_update: schemas.AITableUserUpdateInput, digest: str, faiss_id: str):
+    rag = schemas.RAGTableCreate(
+        ai_id = ai_update.ai_id,
+        created_at = datetime.now(),
+        comments =ai_update.comments,
+        tx_url= digest,
+        faissid = faiss_id
+    )
     db_rag = models.RAGTable(**rag.model_dump())
     db.add(db_rag)
     db.commit()
