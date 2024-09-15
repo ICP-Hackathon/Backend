@@ -11,6 +11,7 @@ from AI.crud import add_text, delete_text
 from AI.main import rag_qa
 from fastapi.middleware.cors import CORSMiddleware
 
+from Walrus.main import send_data
 
 
 import random
@@ -118,8 +119,16 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     faiss_id = ai.name + "tx" + str(random.random())
     # AI 콘텐츠를 추가하는 로직
     embed = add_text([ai.contents], [{"source" : ai_id}], [faiss_id])
+    res = send_data(str(embed))
+    blob_id = ''
+    if 'newlyCreated' in res :
+        blob_id = res['newlyCreated']['blobObject']['blobId']
+    elif 'alreadyCertified' in res :
+        blob_id = res['alreadyCertified']['blobId']
 
     
+
+
     aiDB = schemas.AITableBase(
         ai_id = ai_id,
         creator_address =  ai.creator_address,

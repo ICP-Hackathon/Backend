@@ -6,6 +6,7 @@ from datetime import time, datetime
 class UserTableBase(BaseModel):
     user_address: str
     nickname: Optional[str] = '0.0'
+    image_url: Optional[str] = None
     gender: Optional[str] = None
     country: Optional[str] = None
     phone: Optional[str] = None
