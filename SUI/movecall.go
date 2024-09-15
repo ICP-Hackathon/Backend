@@ -14,9 +14,10 @@ import (
 )
 
 func MoveCall(
-	packageObjectId string,
-	module string,
+	// packageObjectId string,
+	// module string,
 	function string,
+	typeArguments []interface{},
 	arguments []interface{},
 ) *models.SuiTransactionBlockResponse {
 	err := godotenv.Load()
@@ -39,19 +40,19 @@ func MoveCall(
 
 	gasObj := "0x71434fc47595c28e2a361d579e58d4f9b3931daa879398f1c4ad67ab1e04e7a7"
 
+	packageObjectId := "0xf8ecfb330ca0b55f8ffc4954b174c08b2df88c28b1e374bf4558a340683b3c86"
+	module := "ragcoon"
+
 	rsp, err := cli.MoveCall(ctx, models.MoveCallRequest{
-		Signer: signerAccount.Address,
-		// PackageObjectId: "0x0252927bfd6eb72291b39549efbe349ef7c81c427d58009ce1a50343d5a3636c",
-		// Module:          "ragcoon",
-		// Function:        "new_ragcoon_stage",
+		Signer:          signerAccount.Address,
 		PackageObjectId: packageObjectId,
 		Module:          module,
 		Function:        function,
-		TypeArguments:   []interface{}{},
-		// Arguments:       []interface{}{ },
-		Arguments: arguments,
-		Gas:       gasObj,
-		GasBudget: "100000000",
+		// TypeArguments:   []interface{}{},
+		TypeArguments: typeArguments,
+		Arguments:     arguments,
+		Gas:           gasObj,
+		GasBudget:     "100000000",
 	})
 
 	if err != nil {
@@ -81,49 +82,32 @@ func MoveCall(
 }
 
 func NewRagcoonStage() *models.SuiTransactionBlockResponse {
-	packageObjectId := "0x0252927bfd6eb72291b39549efbe349ef7c81c427d58009ce1a50343d5a3636c"
-	module := "ragcoon"
 
-	res := MoveCall(packageObjectId, module, "new_ragcoon_stage", []interface{}{})
+	res := MoveCall("new_ragcoon_stage", []interface{}{}, []interface{}{})
 	return res
 }
 
 func AddCreator(ragcoonStageId string, creatorAddress string) *models.SuiTransactionBlockResponse {
-	packageObjectId := "0x0252927bfd6eb72291b39549efbe349ef7c81c427d58009ce1a50343d5a3636c"
-	module := "ragcoon"
-
-	res := MoveCall(packageObjectId, module, "add_creator", []interface{}{ragcoonStageId, creatorAddress})
+	res := MoveCall("add_creator", []interface{}{}, []interface{}{ragcoonStageId, creatorAddress})
 	return res
 }
 
 func AddConsumer(ragcoonStageId string, consumerAddress string) *models.SuiTransactionBlockResponse {
-	packageObjectId := "0x0252927bfd6eb72291b39549efbe349ef7c81c427d58009ce1a50343d5a3636c"
-	module := "ragcoon"
-
-	res := MoveCall(packageObjectId, module, "add_consumer", []interface{}{ragcoonStageId, consumerAddress})
+	res := MoveCall("add_consumer", []interface{}{}, []interface{}{ragcoonStageId, consumerAddress})
 	return res
 }
 
 func AddAI(ragcoonStageId string, creatorID string, AIID string) *models.SuiTransactionBlockResponse {
-	packageObjectId := "0x0252927bfd6eb72291b39549efbe349ef7c81c427d58009ce1a50343d5a3636c"
-	module := "ragcoon"
-
-	res := MoveCall(packageObjectId, module, "add_ai", []interface{}{ragcoonStageId, creatorID, AIID})
+	res := MoveCall("add_ai", []interface{}{}, []interface{}{ragcoonStageId, creatorID, AIID})
 	return res
 }
 
 func AddBlob(ragcoonStageId string, creatorID string, AIID string, blobID string) *models.SuiTransactionBlockResponse {
-	packageObjectId := "0x0252927bfd6eb72291b39549efbe349ef7c81c427d58009ce1a50343d5a3636c"
-	module := "ragcoon"
-
-	res := MoveCall(packageObjectId, module, "add_blob_id", []interface{}{ragcoonStageId, creatorID, AIID, blobID})
+	res := MoveCall("add_blob_id", []interface{}{}, []interface{}{ragcoonStageId, creatorID, AIID, blobID})
 	return res
 }
 
 func PayUsage(ragcoonStageId string, creatorID string, AIID string, consumerID string, amount uint64) *models.SuiTransactionBlockResponse {
-	packageObjectId := "0x0252927bfd6eb72291b39549efbe349ef7c81c427d58009ce1a50343d5a3636c"
-	module := "ragcoon"
-
-	res := MoveCall(packageObjectId, module, "pay_usage", []interface{}{ragcoonStageId, creatorID, AIID, consumerID, amount})
+	res := MoveCall("pay_usage", []interface{}{}, []interface{}{ragcoonStageId, creatorID, AIID, consumerID, amount})
 	return res
 }
