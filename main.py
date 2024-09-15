@@ -29,11 +29,6 @@ app.add_middleware(
     allow_headers=["*"],  # 허용할 헤더
 )
 
-BASE_URL = "http://localhost:8080"
-RAGCOON_STAGE_ID = "0x68e7482eb88d2bfe57481a8078ed447bc50c00f7487d9484bc00b9e49c0c7986"
-headers = {"Content-Type": "application/json"}
-
-
 # 종속성 만들기: 요청 당 독립적인 데이터베이스 세션/연결이 필요하고 요청이 완료되면 닫음
 def get_db():
     db = SessionLocal()
