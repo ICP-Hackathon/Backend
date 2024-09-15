@@ -1,6 +1,6 @@
 import requests
 from Walrus import walrus
-from DB import crud, models, schemas
+from DB import models
 
 BASE_URL = "http://localhost:8080"
 RAGCOON_STAGE_ID = "0x68e7482eb88d2bfe57481a8078ed447bc50c00f7487d9484bc00b9e49c0c7986"
