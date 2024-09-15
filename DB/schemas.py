@@ -47,13 +47,8 @@ class AITableCreate(BaseModel):
     contents: Optional[str] = None
     comments: Optional[str] = None
 
-class AITableOut(BaseModel):
-    creator_address: Optional[str] = None
-    name: Optional[str] = None
-    image_url: Optional[str] = None
-    category: Optional[str] = None
-    introductions: Optional[str] = None
-    nickname: Optional[str] = '0.0'
+class AITableOut(AITableBase):
+    creator: Optional[str] = None
     class Config:
         from_attributes = True
 
@@ -107,7 +102,7 @@ class AISearchListOut(BaseModel):
 class RAGTableBase(BaseModel):
     rag_id: int
     ai_id: Optional[str] = None
-    created_at: Optional[str] = None
+    created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
     comments: Optional[str] = None
     tx_url: Optional[str] = None
     faiss_id: Optional[str] = None
@@ -118,7 +113,7 @@ class RAGTableBase(BaseModel):
 
 class RAGTableCreate(BaseModel):
     ai_id: Optional[str] = None
-    created_at: Optional[str] = None
+    created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
     comments: Optional[str] = None
     tx_url: Optional[str] = None
     faiss_id: Optional[str] = None
@@ -132,7 +127,7 @@ class RAGTableListOut(BaseModel):
 class AIDetail(BaseModel):
     ai_id: str
     creator_address: Optional[str] = None
-    created_at: Optional[str] = None
+    created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
     name: Optional[str] = None
     image_url: Optional[str] = None
     category: Optional[str] = None
@@ -155,12 +150,20 @@ class ChatTableBase(BaseModel):
     class Config:
         from_attributes = True
 
+class ChatTableOut(AITableBase):
+    chat_id: str
+    ai_id: Optional[str] = None
+    user_address: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
 class ChatTableCreate(BaseModel):
     ai_id: Optional[str] = None
     user_address: Optional[str] = None
 
 class ChatTableListOut(BaseModel):
-    chats: List[ChatTableBase]
+    chats: List[ChatTableOut]
 
     class Config:
         from_attributes = True
@@ -169,7 +172,7 @@ class ChatTableListOut(BaseModel):
 class ChatContentsTableBase(BaseModel):
     chat_contents_id: str
     chat_id: Optional[str] = None
-    created_at: Optional[str] = None
+    created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
     sender_id: Optional[str] = None
     message: Optional[str] = None
     class Config:

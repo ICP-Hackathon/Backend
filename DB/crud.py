@@ -83,20 +83,32 @@ def get_ais_by_weekly_users(db: Session, offset: int, limit : int):
     return db.query(models.AITable).order_by(models.AITable.weekly_users.desc()).offset(offset).limit(limit - offset).all()
 
 def get_today_ais(db: Session):
-    results = db.query(models.AITable, models.UserTable).join(models.UserTable, models.AITable.creator_address == models.UserTable.user_address).order_by(models.AITable.created_at.desc()).limit(4).all()
+    # Join the tables and fetch the data
+    results = db.query(models.AITable, models.UserTable)\
+        .join(models.UserTable, models.AITable.creator_address == models.UserTable.user_address)\
+        .order_by(models.AITable.created_at.desc())\
+        .limit(4).all()
+
     ais = []
+    # Manually map each result to the AITableOut schema
     for ait, user in results:
         ai_out = schemas.AITableOut(
+            ai_id=ait.ai_id,
             creator_address=ait.creator_address,
+            created_at=ait.created_at,
             name=ait.name,
             image_url=ait.image_url,
             category=ait.category,
             introductions=ait.introductions,
-            nickname=user.nickname     # From UserTable
+            chat_counts=ait.chat_counts,
+            prompt_tokens=ait.prompt_tokens,
+            completion_tokens=ait.completion_tokens,
+            weekly_users=ait.weekly_users,
+            creator=user.nickname  # Mapping the nickname to the `creator` field
         )
-        ais.append(ai_out)  
+        ais.append(ai_out)
+    
     return ais
-
 
 def get_category_ais_by_weekly_users(db: Session, offset: int, limit : int, category:str):
     return db.query(models.AITable).filter(models.AITable.category == category).order_by(models.AITable.weekly_users.desc()).offset(offset).limit(limit - offset).all()
@@ -199,9 +211,37 @@ def delete_raglogs(db: Session, ai_id: str):
 def get_chat(db: Session, chat_id: str):
     return db.query(models.ChatTable).filter(models.ChatTable.chat_id == chat_id).first()
 
-# # ChatTable CRUD functions
 def get_chats(db: Session, user_address: str):
-    return db.query(models.ChatTable).filter(models.ChatTable.user_address == user_address).all()
+    # Perform the join query and extract the necessary fields
+    results = (
+        db.query(models.ChatTable, models.AITable)
+        .join(models.AITable, models.ChatTable.ai_id == models.AITable.ai_id)  # Explicit join condition
+        .filter(models.ChatTable.user_address == user_address)
+        .all()
+    )
+    
+    # Combine the data into a single response format
+    chats = []
+    for chat, ai in results:
+        chat_data = {
+            'chat_id': chat.chat_id,
+            'ai_id': chat.ai_id,
+            'user_address': chat.user_address,
+            'name': ai.name,
+            'category': ai.category,
+            'creator_address': ai.creator_address,
+            'created_at': ai.created_at,
+            'image_url': ai.image_url,
+            'introductions': ai.introductions,
+            'chat_counts': ai.chat_counts,
+            'prompt_tokens': ai.prompt_tokens,
+            'completion_tokens': ai.completion_tokens,
+            'weekly_users': ai.weekly_users,
+        }
+        chats.append(chat_data)
+    
+    return chats
+
 
 def create_chat(db: Session, chat: schemas.ChatTableBase):
     db_chat = models.ChatTable(**chat.model_dump())

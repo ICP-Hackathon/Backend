@@ -147,7 +147,7 @@ def search_ai(ai_name: str, db: Session = Depends(get_db)):
     return schemas.AISearchListOut(ais=search_results)
 
 
-@app.post("/create_ai/", response_model=schemas.AITableBase)
+@app.post("/create_ai", response_model=schemas.AITableBase)
 def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     add_ai_url = BASE_URL + "/movecall/add_ai"  # The URL of the REST API you want to call
     add_blob_url = BASE_URL + "/movecall/add_blob_id"  # The URL of the REST API you want to call
@@ -195,7 +195,6 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     response2 = requests.get(add_blob_url, params=add_blob_params, headers=headers).json()
     digest = response2.get('digest')
 
-
     aiDB = schemas.AITableBase(
         ai_id = ai_id,
         creator_address =  ai.creator_address,
@@ -216,9 +215,9 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     # AILog 테이블에 로그 기록
     rag = schemas.RAGTableCreate(
         ai_id = ai_id,
-        created_at = ctime(),
+        created_at = datetime.now(),
         comments =ai.comments,
-        tx_url= digest,
+        tx_url= "test",
         faissid = faiss_id
     )
     crud.create_rag(db=db, rag=rag)
@@ -261,7 +260,7 @@ def update_ai(ai_update: schemas.AITableUserUpdateInput, db: Session = Depends(g
         # AILog 테이블에 로그 기록
         rag = schemas.RAGTableCreate(
             ai_id = ai_update.ai_id,
-            created_at = ctime(),
+            created_at = datetime.now(),
             comments =ai_update.comments,
             tx_url= digest,
             faissid = faiss_id
