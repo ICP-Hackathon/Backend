@@ -1,44 +1,20 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
+from datetime import datetime
 
-# UserTable CRUD functions
+################### AITable CRUD functions ###################
 
-def check_user(db: Session, user_address: str):
-    res =  db.query(models.UserTable).filter(models.UserTable.user_address == user_address).first()
-    if res:
-        return True
-    else:
-        return False
+def get_ais(db: Session, offset: int, limit: int):
+    return db.query(models.AITable).offset(offset).limit(limit-offset).all()
 
-def get_user(db: Session, user_address: str):
-    return db.query(models.UserTable).filter(models.UserTable.user_address == user_address).first()
-
-def add_user(db: Session, user: schemas.UserTableBase):
-    db_user = models.UserTable(**user.model_dump())
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
-
-# def update_user(db: Session, userid: str, user_update: schemas.UserTableUpdate):
-#     db_user = get_user(db, userid)
-#     if db_user:
-#         for key, value in user_update.model_dump(exclude_unset=True).items():
-#             setattr(db_user, key, value)
-#         db.commit()
-#         db.refresh(db_user)
-#     return db_user
-
-# def delete_user(db: Session, userid: str):
-#     db_user = get_user(db, userid)
-#     if db_user:
-#         db.delete(db_user)
-#         db.commit()
-#     return db_user
-
-# # AITable CRUD functions
 def get_ai(db: Session, ai_id: str):
     return db.query(models.AITable).filter(models.AITable.ai_id == ai_id).first()
+
+def get_user_ais(db: Session, user_address : str):
+    return db.query(models.AITable).filter(models.AITable.creator_address == user_address).all()
+
+def get_rags(db: Session, ai_id: str):
+    return db.query(models.RAGTable).filter(models.AITable.ai_id == ai_id).all()
 
 def get_ai_detail(db: Session, ai_id: str) -> schemas.AIDetail:
     # AITable과 RAGTable을 ai_id로 조인
@@ -76,8 +52,6 @@ def get_ai_detail(db: Session, ai_id: str) -> schemas.AIDetail:
     
     return ai_detail
 
-def get_user_ais(db: Session, user_address : str):
-    return db.query(models.AITable).filter(models.AITable.creator_address == user_address).all()
 
 def get_ais_by_weekly_users(db: Session, offset: int, limit : int):
     return db.query(models.AITable).order_by(models.AITable.weekly_users.desc()).offset(offset).limit(limit - offset).all()
@@ -120,17 +94,38 @@ def search_ai(db: Session, name: str):
 # def get_top_10_ai_by_usage(db: Session):
 #     return db.query(models.AITable).order_by(models.AITable.usage.desc()).limit(10).all()
 
-def create_ai(db: Session, ai: schemas.AITableCreate):
-    db_ai = models.AITable(**ai.model_dump())
+def create_ai(db: Session,ai_id:str, ai: schemas.AITableCreate):
+    aiDB = schemas.AITableBase(
+        ai_id = ai_id,
+        creator_address =  ai.creator_address,
+        created_at = datetime.now(),
+        name = ai.name,
+        image_url = ai.image_url,
+        category = ai.category,
+        introductions = ai.introductions,
+        chat_counts=0,
+        prompt_tokens=0,
+        completion_tokens=0,
+        weekly_users = 0
+    )
+
+    db_ai = models.AITable(**aiDB.model_dump())
     db.add(db_ai)
     db.commit()
     db.refresh(db_ai)
     return db_ai
 
-def update_ai(db: Session, ai_id: str, ai_update: schemas.AITableUpdate):
+def update_ai(db: Session, ai_id: str, ai_update: schemas.AITableUserUpdateInput):
+    aiUpdateDB = schemas.AITableUpdate(
+        name = ai_update.name,
+        image_url = ai_update.image_url,
+        category= ai_update.category,  # 카테고리 필드, None이 기본값
+        introductions=ai_update.introductions  # 소개 필드, None이 기본값
+    )
+    
     db_ai = get_ai(db, ai_id)
     if db_ai:
-        for key, value in ai_update.model_dump(exclude_unset=True).items():
+        for key, value in aiUpdateDB.model_dump(exclude_unset=True).items():
             setattr(db_ai, key, value)
         db.commit()
         db.refresh(db_ai)
@@ -169,7 +164,15 @@ def delete_ai(db: Session, ai_id: str):
 def get_raglogs_by_aiid(db: Session, ai_id: str):
     return db.query(models.RAGTable).filter(models.RAGTable.ai_id == ai_id).all()
 
-def create_rag(db: Session, rag: schemas.RAGTableCreate):
+# def create_rag(db: Session, ai_update: schemas.AITableUserUpdateInput, digest: str, faiss_id: str):
+def create_rag(db: Session, ai_id: str, comments: str, digest: str, faiss_id: str):
+    rag = schemas.RAGTableCreate(
+        ai_id = ai_id,
+        created_at = datetime.now(),
+        comments = comments,
+        tx_url= digest,
+        faissid = faiss_id
+    )
     db_rag = models.RAGTable(**rag.model_dump())
     db.add(db_rag)
     db.commit()
@@ -207,89 +210,3 @@ def delete_raglogs(db: Session, ai_id: str):
     db.commit()
 
     return ailogs  # 삭제된 로그 목록 반환
-# # ChatTable CRUD functions
-def get_chat(db: Session, chat_id: str):
-    return db.query(models.ChatTable).filter(models.ChatTable.chat_id == chat_id).first()
-
-def get_chats(db: Session, user_address: str):
-    # Perform the join query and extract the necessary fields
-    results = (
-        db.query(models.ChatTable, models.AITable)
-        .join(models.AITable, models.ChatTable.ai_id == models.AITable.ai_id)  # Explicit join condition
-        .filter(models.ChatTable.user_address == user_address)
-        .all()
-    )
-    
-    # Combine the data into a single response format
-    chats = []
-    for chat, ai in results:
-        chat_data = {
-            'chat_id': chat.chat_id,
-            'ai_id': chat.ai_id,
-            'user_address': chat.user_address,
-            'name': ai.name,
-            'category': ai.category,
-            'creator_address': ai.creator_address,
-            'created_at': ai.created_at,
-            'image_url': ai.image_url,
-            'introductions': ai.introductions,
-            'chat_counts': ai.chat_counts,
-            'prompt_tokens': ai.prompt_tokens,
-            'completion_tokens': ai.completion_tokens,
-            'weekly_users': ai.weekly_users,
-        }
-        chats.append(chat_data)
-    
-    return chats
-
-
-def create_chat(db: Session, chat: schemas.ChatTableBase):
-    db_chat = models.ChatTable(**chat.model_dump())
-    db.add(db_chat)
-    db.commit()
-    db.refresh(db_chat)
-    return db_chat
-
-# # def update_chat(db: Session, chat_id: str, chat_update: schemas.ChatTableUpdate):
-# #     db_chat = get_chat(db, chat_id)
-# #     if db_chat:
-# #         for key, value in chat_update.model_dump(exclude_unset=True).items():
-# #             setattr(db_chat, key, value)
-# #         db.commit()
-# #         db.refresh(db_chat)
-# #     return db_chat
-
-# def delete_chat(db: Session, chat_id: str):
-#     db_chat = get_chat(db, chat_id)
-#     if db_chat:
-#         db.delete(db_chat)
-#         db.commit()
-#     return db_chat
-
-# # ChatContentsTable CRUD functions
-def get_chat_contents(db: Session, chat_id: str):
-    return db.query(models.ChatContentsTable).filter(models.ChatContentsTable.chat_id == chat_id).all()
-
-
-def create_chat_content(db: Session, chat_content: schemas.ChatContentsTableCreate):
-    db_chat_content = models.ChatContentsTable(**chat_content.model_dump())
-    db.add(db_chat_content)
-    db.commit()
-    db.refresh(db_chat_content)
-    return db_chat_content
-
-# # def update_chat_content(db: Session, chat_content_id: str, chat_content_update: schemas.ChatContentsTableUpdate):
-# #     db_chat_content = get_chat_content(db, chat_content_id)
-# #     if db_chat_content:
-# #         for key, value in chat_content_update.model_dump(exclude_unset=True).items():
-# #             setattr(db_chat_content, key, value)
-# #         db.commit()
-# #         db.refresh(db_chat_content)
-# #     return db_chat_content
-
-# # def delete_chat_content(db: Session, chat_content_id: str):
-# #     db_chat_content = get_chat_content(db, chat_content_id)
-# #     if db_chat_content:
-# #         db.delete(db_chat_content)
-# #         db.commit()
-# #     return db_chat_content
