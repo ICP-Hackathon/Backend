@@ -1,6 +1,6 @@
 import requests
 from Walrus import walrus
-from DB import models
+from DB import models, schemas
 
 BASE_URL = "http://localhost:8080"
 RAGCOON_STAGE_ID = "0x68e7482eb88d2bfe57481a8078ed447bc50c00f7487d9484bc00b9e49c0c7986"
@@ -41,7 +41,7 @@ def add_ai(ai_id: str, creator_address: str):
     return digest
 
 
-def add_blob(ai: models.AITable , embed: str):
+def add_blob(ai: schemas.AITableCreate ,ai_id : str, embed: str):
     url = BASE_URL + "/movecall/add_blob_id"  # The URL of the REST API you want to call
     res = walrus.send_data(str(embed))
 
@@ -55,7 +55,7 @@ def add_blob(ai: models.AITable , embed: str):
     params = {
         "ragcoonStageId": RAGCOON_STAGE_ID,
         "creatorAddress": ai.creator_address,
-        "AIID" : ai.ai_id,
+        "AIID" : ai_id,
         "blobID" : blob_id
     }
     # Make the POST request to another API with the received data
