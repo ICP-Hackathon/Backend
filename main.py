@@ -66,19 +66,19 @@ def add_user(user: schemas.UserTableCreate, db: Session = Depends(get_db)):
 
 ########################### AI 관련 API ###########################
 
-@app.get("/ais/{offset}/{limit}", response_model=schemas.AITableListOut)
+@app.get("/ais/base/{offset}/{limit}", response_model=schemas.AITableListOut)
 def get_ais(offset: int, limit: int, db: Session = Depends(get_db)):
     res = ais.get_ais(db=db, offset=offset, limit=limit)
     return schemas.AITableListOut(ais=res)
 
-@app.get("/ais/{ai_id}", response_model=schemas.AIDetail)
+@app.get("/ais/ai_id/{ai_id}", response_model=schemas.AIDetail)
 def get_ai(ai_id: str, db: Session = Depends(get_db)):
     db_ai = ais.get_ai_detail(db, ai_id=ai_id)
     if not db_ai:
         raise HTTPException(status_code=404, detail="AI not found")
     return db_ai
 
-@app.get("/ais/{user_address}", response_model=schemas.AITableListOut)
+@app.get("/ais/user/{user_address}", response_model=schemas.AITableListOut)
 def get_user_ais(user_address: str, db: Session = Depends(get_db)):
     res = ais.get_user_ais(db=db, user_address=user_address)
     return schemas.AITableListOut(ais=res)
@@ -98,14 +98,27 @@ def get_trend_ais(category : str, offset : int, limit : int, db: Session = Depen
         res = ais.get_category_ais_by_weekly_users(db=db, offset=offset, limit=limit, category=category)
         return schemas.AITableListOut(ais=res)
 
-@app.get("/ais/today", response_model=schemas.AITableListOut)
+@app.get("/ais/today_ais", response_model=schemas.AITableListOut)
 def get_today_ais(db: Session = Depends(get_db)):
-    res =  ais.get_today_ais(db=db)
-    return schemas.AITableListOut(ais=res)  
+    res = ais.get_ais(db=db, offset=0, limit=4)
+    return schemas.AITableListOut(ais=res)
 
+# @app.get("/ais/search/{ai_name}", response_model=schemas.AISearchListOut)
+# def search_ai(ai_name: str, db: Session = Depends(get_db)):
+#     db_ai = ais.search_ai(db, name=ai_name)
+#     if not db_ai:
+#         raise HTTPException(status_code=404, detail="AI not found")
+#     search_results = [
+#         schemas.AISearch(
+#             name=ai.name,
+#             creator_address=ai.creator_address,
+#             image_url=ai.image_url
+#         ) for ai in db_ai
+#     ]
+#     return schemas.AISearchListOut(ais=search_results)
 @app.get("/ais/search/{ai_name}", response_model=schemas.AISearchListOut)
-def search_ai(ai_name: str, db: Session = Depends(get_db)):
-    db_ai = ais.search_ai(db, name=ai_name)
+def search_ai_by_name(ai_name: str, db: Session = Depends(get_db)):
+    db_ai = ais.search_ai_by_name(db, name=ai_name)
     if not db_ai:
         raise HTTPException(status_code=404, detail="AI not found")
     search_results = [
@@ -117,6 +130,7 @@ def search_ai(ai_name: str, db: Session = Depends(get_db)):
     ]
     return schemas.AISearchListOut(ais=search_results)
 
+
 @app.post("/ais", response_model=schemas.AITableBase)
 def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     ai_id = ai.creator_address + '_' + ai.name
@@ -126,7 +140,7 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     if db_ai:
         raise HTTPException(status_code=400, detail="AI with this ID already exists")
 
-    db_user = ais.get_user(db, user_address=ai.creator_address)
+    db_user = users.get_user(db, user_address=ai.creator_address)
     if not db_user:
         raise HTTPException(status_code=400, detail="You are not user")
     
@@ -139,7 +153,7 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     suiapi.add_ai(ai_id=ai_id, creator_address=ai.creator_address)
 
     # blov 저장
-    digest = suiapi.add_blob(ai=ai, embed=embed)
+    digest = suiapi.add_blob(ai=ai, ai_id=ai_id, embed=embed)
     
     # AILog 테이블에 로그 기록
     ais.create_rag(db=db, ai_id=ai_id, comments=ai.comments, digest=digest, faiss_id=faiss_id)
@@ -197,20 +211,21 @@ def delete_ai(ai_id: str, user_address: str, db: Session = Depends(get_db)):
 ########################### Chat 관련 API ###########################
 
 # # 유저 채팅 목록 읽기
-@app.get("/chats/{user_address}", response_model=schemas.ChatTableListOut)
+@app.get("/chats/user/{user_address}", response_model=schemas.ChatTableListOut)
 def get_chats(user_address: str, db: Session = Depends(get_db)):
-    db_chat = chats.get_chats(db, user_address=user_address)
+    db_chat = chats.get_chats_by_user_address(db, user_address=user_address)
     if not db_chat:
         raise HTTPException(status_code=404, detail="Chat not found")
     return schemas.ChatTableListOut(chats=db_chat)
 
-@app.get("/chats/{ai_id}", response_model=schemas.ChatTableListOut)
+@app.get("/chats/ai_id/{ai_id}", response_model=schemas.ChatTableListOut)
 def get_chats(ai_id: str, db: Session = Depends(get_db)):
-    db_chat = chats.get_chats(db, ai_id=ai_id)
+    db_chat = chats.get_chats_by_ai_id(db, ai_id=ai_id)
     if not db_chat:
         raise HTTPException(status_code=404, detail="Chat not found")
     return schemas.ChatTableListOut(chats=db_chat)
-    
+
+
 # # 특정 채팅 읽기
 @app.get("/chats/contents/{chat_id}", response_model=schemas.ChatContentsTableListOut)
 def read_chat_content(chat_id: str, db: Session = Depends(get_db)):
@@ -241,7 +256,7 @@ def create_chat(chat: schemas.ChatTableCreate, db: Session = Depends(get_db)):
 
 
 # # 채팅 내용 생성
-@app.post("/chats/contents/{chat_id}", response_model=schemas.ChatContentsTableBase)
+@app.post("/chats/create_contents/{chat_id}", response_model=schemas.ChatContentsTableBase)
 def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat_id :str, db: Session = Depends(get_db)):
     chat_exist = chats.get_chat(db, chat_id=chat_id)
     if not chat_exist:

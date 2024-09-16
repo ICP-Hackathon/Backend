@@ -58,36 +58,14 @@ def get_ais_by_weekly_users(db: Session, offset: int, limit : int):
 
 def get_today_ais(db: Session):
     # Join the tables and fetch the data
-    results = db.query(models.AITable, models.UserTable)\
-        .join(models.UserTable, models.AITable.creator_address == models.UserTable.user_address)\
-        .order_by(models.AITable.created_at.desc())\
-        .limit(4).all()
-
-    ais = []
-    # Manually map each result to the AITableOut schema
-    for ait, user in results:
-        ai_out = schemas.AITableOut(
-            ai_id=ait.ai_id,
-            creator_address=ait.creator_address,
-            created_at=ait.created_at,
-            name=ait.name,
-            image_url=ait.image_url,
-            category=ait.category,
-            introductions=ait.introductions,
-            chat_counts=ait.chat_counts,
-            prompt_tokens=ait.prompt_tokens,
-            completion_tokens=ait.completion_tokens,
-            weekly_users=ait.weekly_users,
-            creator=user.nickname  # Mapping the nickname to the `creator` field
-        )
-        ais.append(ai_out)
+    return db.query(models.AITable).order_by(models.AITable.weekly_users.desc()).offset(0).limit(4).all()
     
-    return ais
-
 def get_category_ais_by_weekly_users(db: Session, offset: int, limit : int, category:str):
     return db.query(models.AITable).filter(models.AITable.category == category).order_by(models.AITable.weekly_users.desc()).offset(offset).limit(limit - offset).all()
 
-def search_ai(db: Session, name: str):
+# def search_ai(db: Session, name: str):
+#     return db.query(models.AITable).filter(models.AITable.name.like(f"%{name}%")).all()
+def search_ai_by_name(db: Session, name: str):
     return db.query(models.AITable).filter(models.AITable.name.like(f"%{name}%")).all()
 
 # # AITable CRUD functions

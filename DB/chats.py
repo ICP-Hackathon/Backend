@@ -5,7 +5,7 @@ from . import models, schemas
 def get_chat(db: Session, chat_id: str):
     return db.query(models.ChatTable).filter(models.ChatTable.chat_id == chat_id).first()
 
-def get_chats(db: Session, user_address: str):
+def get_chats_by_user_address(db: Session, user_address: str):
     # Perform the join query and extract the necessary fields
     results = (
         db.query(models.ChatTable, models.AITable)
@@ -36,7 +36,7 @@ def get_chats(db: Session, user_address: str):
     
     return chats
 
-def get_chats(db: Session, ai_id: str):
+def get_chats_by_ai_id(db: Session, ai_id: str):
     # Perform the join query and extract the necessary fields
     results = (
         db.query(models.ChatTable, models.AITable)
