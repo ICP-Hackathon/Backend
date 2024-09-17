@@ -52,3 +52,10 @@ class ChatContentsTable(Base):
     created_at = Column(DateTime, default=datetime.now(), nullable=True)  # Use DateTime instead of String
     sender_id = Column(String, nullable=True)
     message = Column(Text, nullable=True)
+
+class LikeTable(Base):
+    __tablename__ = "liketable"
+
+    like_id = Column(Integer, primary_key=True, autoincrement=True)
+    user_address = Column(String, nullable=True)
+    ai_id = Column(String, nullable=True)

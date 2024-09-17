@@ -2,16 +2,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import time, datetime
 
-# UserTable 스키마
-
-class UserTableCreate(BaseModel):
-    user_address: str
-    nickname: Optional[str] = '0.0'
-    image_url: Optional[str] = None
-    gender: Optional[str] = None
-    country: Optional[str] = None
-    phone: Optional[str] = None
-
+################# USER TABLE #################
 
 class UserTableBase(BaseModel):
     user_address: str
@@ -20,8 +11,29 @@ class UserTableBase(BaseModel):
     gender: Optional[str] = None
     country: Optional[str] = None
     phone: Optional[str] = None
+    class Config:
+        from_attributes = True
 
-# AITable 스키마
+class UserTableUpdate(BaseModel):
+    user_address: str
+    image_url: Optional[str] = None
+    gender: Optional[str] = None
+    country: Optional[str] = None
+    phone: Optional[str] = None
+    class Config:
+        from_attributes = True
+
+class UserTableCreate(UserTableUpdate):
+    nickname: Optional[str] = '0.0' 
+    pass
+
+class UserTableList(BaseModel):
+    users : List[UserTableBase]
+    class Config:
+        from_attributes = True
+
+################# AI TABLE #################
+
 class AITableBase(BaseModel):
     ai_id: str
     creator_address: Optional[str] = None
@@ -35,6 +47,20 @@ class AITableBase(BaseModel):
     completion_tokens : Optional[float] = None
     weekly_users : Optional[int] = None
 
+    class Config:
+        from_attributes = True
+
+class AIOverview(BaseModel):
+    ai_id: str
+    creator_address: Optional[str] = None
+    name: Optional[str] = None
+    creator: Optional[str] = None
+    like : Optional[bool] = False
+    class Config:
+        from_attributes = True
+
+class AIOVerviewList(BaseModel):
+    ais : List[AIOverview]
     class Config:
         from_attributes = True
 
@@ -191,5 +217,38 @@ class ChatContentsTableCreate(BaseModel):
 class ChatContentsTableListOut(BaseModel):
     chats: List[ChatContentsTableBase]
 
+    class Config:
+        from_attributes = True
+
+
+##Like Table
+
+# Base schema for LikeTable
+class LikeTableBase(BaseModel):
+    like_id: int
+    user_address: Optional[str] = None
+    ai_id: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+# Schema for creating a Like entry
+class LikeTableCreate(BaseModel):
+    user_address: str
+    ai_id: str
+
+    class Config:
+        from_attributes = True
+
+class LikedAIOut(LikeTableBase):
+    creator_address: Optional[str] = None
+    name: Optional[str] = None
+    image_url: Optional[str] = None
+    category: Optional[str] = None
+    class Config:
+        from_attributes = True
+
+class LikedAIList(BaseModel):
+    ais : List[LikedAIOut]
     class Config:
         from_attributes = True
