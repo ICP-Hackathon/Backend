@@ -193,3 +193,36 @@ class ChatContentsTableListOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+##Like Table
+
+# Base schema for LikeTable
+class LikeTableBase(BaseModel):
+    like_id: int
+    user_address: Optional[str] = None
+    ai_id: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+# Schema for creating a Like entry
+class LikeTableCreate(BaseModel):
+    user_address: str
+    ai_id: str
+
+    class Config:
+        from_attributes = True
+
+class LikedAIOut(LikeTableBase):
+    creator_address: Optional[str] = None
+    name: Optional[str] = None
+    image_url: Optional[str] = None
+    category: Optional[str] = None
+    class Config:
+        from_attributes = True
+
+class LikedAIList(BaseModel):
+    ais : List[LikedAIOut]
+    class Config:
+        from_attributes = True

@@ -3,7 +3,7 @@ from typing import List
 from fastapi import Depends, FastAPI, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from DB import users, ais, chats, models, schemas
+from DB import users, ais, chats, models, schemas, like
 from DB.database import SessionLocal, engine
 
 from AI.crud import add_text, delete_text
@@ -309,3 +309,31 @@ def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat
 #     if not deleted_chat:
 #         raise HTTPException(status_code=404, detail="Chat not found")
 #     return deleted_chat
+
+
+# Get all AIs liked by a user
+@app.get("/likes/user/{user_address}", response_model=schemas.LikedAIList)
+def get_liked_ai_user(user_address: str, db: Session = Depends(get_db)):
+    db_likes = like.get_user_like_ais(db, user_address=user_address)
+    if not db_likes:
+        raise HTTPException(status_code=404, detail="No liked AIs found for this user")
+    return schemas.LikedAIList(ais=db_likes)
+
+# Create a like for an AI by a user
+@app.post("/likes", response_model=schemas.LikeTableCreate)
+def create_like(likes: schemas.LikeTableCreate, db: Session = Depends(get_db)):
+    # Check if the user has already liked the AI
+    already_liked = like.is_ai_liked_by_user(db, user_address=likes.user_address, ai_id=likes.ai_id)
+    if already_liked:
+        raise HTTPException(status_code=400, detail="AI already liked by this user")
+
+    db_like = like.create_user_like_ai(db, user_address=likes.user_address, ai_id=likes.ai_id)
+    return db_like
+
+# Delete a like for an AI by a user
+@app.delete("/likes", response_model=bool)
+def delete_like(user_address: str, ai_id: str, db: Session = Depends(get_db)):
+    success = like.delete_user_like_ai(db, user_address=user_address, ai_id=ai_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Like not found or already deleted")
+    return success
