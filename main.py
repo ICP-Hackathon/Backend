@@ -57,13 +57,14 @@ def add_user(user: schemas.UserTableCreate, db: Session = Depends(get_db)):
     suiapi.add_user_creator_consumser(user.user_address)
     return users.add_user(db, user = user)
 
-@app.get("/users/{offset}/{limit}", response_model=List[schemas.UserTableBase])
+@app.get("/users/{offset}/{limit}", response_model=schemas.UserTableList)
 def get_users(offset : int, limit : int, db: Session = Depends(get_db)):
-    return users.get_users(db=db, offset=offset, limit=limit)
+    res = users.get_users(db=db, offset=offset, limit=limit)
+    return schemas.UserTableList(users=res)
 
-# @app.put("/users", response_model=schemas.UserTableBase)
-# def update_user(user: schemas.UserTableCreate, db: Session = Depends(get_db)):
-#     return users.update_user(db, user = user)
+@app.put("/users", response_model=schemas.UserTableBase)
+def update_user(user: schemas.UserTableUpdate, db: Session = Depends(get_db)):
+    return users.update_user(db, user_update = user)
 
 ########################### AI 관련 API ###########################
 
@@ -99,10 +100,15 @@ def get_trend_ais(category : str, offset : int, limit : int, db: Session = Depen
         res = ais.get_category_ais_by_weekly_users(db=db, offset=offset, limit=limit, category=category)
         return schemas.AITableListOut(ais=res)
 
-@app.get("/ais/today_ais", response_model=schemas.AITableListOut)
+@app.get("/ais/today_ais", response_model=schemas.AIOVerviewList)
 def get_today_ais(db: Session = Depends(get_db)):
     res = ais.get_ais(db=db, offset=0, limit=4)
-    return schemas.AITableListOut(ais=res)
+    return schemas.AIOVerviewList(ais=res)
+
+@app.get("/ais/today_ais/{user_address}", response_model=schemas.AIOVerviewList)
+def get_today_ais(user_address : str, db: Session = Depends(get_db)):
+    res = ais.get_today_ais(db=db, user_address=user_address)
+    return res
 
 # @app.get("/ais/search/{ai_name}", response_model=schemas.AISearchListOut)
 # def search_ai(ai_name: str, db: Session = Depends(get_db)):
