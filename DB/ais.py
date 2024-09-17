@@ -77,16 +77,40 @@ def get_today_ais(db: Session, user_address:str):
         )
         ai_overview_list.append(ai_overview)
 
+    return schemas.AIOVerviewList(ais=ai_overview_list)    
+
+
+
+    
+def get_category_ais_by_weekly_users(db: Session, offset: int, limit : int, category:str, user_address):
+    if category == "all":
+        res = db.query(models.AITable, models.UserTable)\
+            .join(models.UserTable, models.AITable.creator_address == models.UserTable.user_address)\
+            .order_by(models.AITable.weekly_users.desc())\
+            .offset(offset)\
+            .limit(limit - offset)\
+            .all()
+    else :
+        res = db.query(models.AITable, models.UserTable)\
+            .join(models.UserTable, models.AITable.creator_address == models.UserTable.user_address)\
+            .filter(models.AITable.category == category)\
+            .order_by(models.AITable.weekly_users.desc())\
+            .offset(offset)\
+            .limit(limit - offset)\
+            .all()
+    
+    ai_overview_list = []
+    for ai, user in res:
+        like_bool = check_like(db=db, user_address=user_address, ai_id = ai.ai_id)
+        ai_overview = schemas.AIOverview(
+            ai_id=ai.ai_id,
+            creator_address=ai.creator_address,
+            name=ai.name,
+            creator=user.nickname,  # Assuming `nickname` is the creator's name
+            like=like_bool  # Since there is a `LikeTable` entry, the user liked this AI
+        )
+        ai_overview_list.append(ai_overview)
     return schemas.AIOVerviewList(ais=ai_overview_list)
-
-    return res
-    
-
-
-
-    
-def get_category_ais_by_weekly_users(db: Session, offset: int, limit : int, category:str):
-    return db.query(models.AITable).filter(models.AITable.category == category).order_by(models.AITable.weekly_users.desc()).offset(offset).limit(limit - offset).all()
 
 # def search_ai(db: Session, name: str):
 #     return db.query(models.AITable).filter(models.AITable.name.like(f"%{name}%")).all()

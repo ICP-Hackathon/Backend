@@ -91,19 +91,9 @@ def get_rags(ai_id: str, db: Session = Depends(get_db)):
     return schemas.RAGTableListOut(logs=res)
 
 #인기있는 AI 보기
-@app.get("/ais/trend/{category}/{offset}/{limit}", response_model=schemas.AITableListOut)
-def get_trend_ais(category : str, offset : int, limit : int, db: Session = Depends(get_db), ):
-    if category == "all":
-        res =  ais.get_ais_by_weekly_users(db=db, offset=offset, limit=limit)
-        return schemas.AITableListOut(ais=res)
-    else:
-        res = ais.get_category_ais_by_weekly_users(db=db, offset=offset, limit=limit, category=category)
-        return schemas.AITableListOut(ais=res)
-
-@app.get("/ais/today_ais", response_model=schemas.AIOVerviewList)
-def get_today_ais(db: Session = Depends(get_db)):
-    res = ais.get_ais(db=db, offset=0, limit=4)
-    return schemas.AIOVerviewList(ais=res)
+@app.get("/ais/trend/{user_address}/{category}/{offset}/{limit}", response_model=schemas.AIOVerviewList)
+def get_trend_ais(user_address : str, category : str, offset : int, limit : int, db: Session = Depends(get_db), ):
+    return ais.get_category_ais_by_weekly_users(db=db, offset=offset, limit=limit, category=category, user_address= user_address)
 
 @app.get("/ais/today_ais/{user_address}", response_model=schemas.AIOVerviewList)
 def get_today_ais(user_address : str, db: Session = Depends(get_db)):
@@ -178,9 +168,9 @@ def update_ais(ai_update: schemas.AITableUserUpdateInput,db: Session = Depends(g
     # AI 콘텐츠가 변경된 경우 add_text 호출
     if ai_update.contents != "":
         faiss_id = db_ai.name + "tx" + str(random.random())
-        embed = add_text([ai_update.contents], [{"source" : db_ai.ai_id}], [faiss_id])
+        embed = add_text([ai_update.contents], [{"source" : ai_update.ai_id}], [faiss_id])
 
-        digest = suiapi.add_blob(ai=db_ai, embed=embed)
+        digest = suiapi.add_blob(ai=db_ai, ai_id=ai_update.ai_id, embed=embed)
 
         ais.create_rag(db=db, ai_id=ai_update.ai_id, comments=ai_update.comments, digest=digest, faiss_id=faiss_id)
     
@@ -258,6 +248,15 @@ def create_chat(chat: schemas.ChatTableCreate, db: Session = Depends(get_db)):
         user_address=chat.user_address,
         ai_id= chat.ai_id,
     )
+    chatcontentsid = chat_id + '_' + ctime()
+    chatContentsTable = schemas.ChatContentsTableCreate(
+        chat_contents_id= chatcontentsid,
+        chat_id = chat_id,
+        sender_id = "AI_" + chat.ai_id,
+        message = "Hello! How Can I assist you?"
+    )
+
+    chats.create_chat_content(db=db, chat_content=chatContentsTable)
 
     return chats.create_chat(db=db, chat=chatTable)
 
@@ -300,7 +299,7 @@ def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat
     answerContentsTable = schemas.ChatContentsTableCreate(
         chat_contents_id =  chatcontentsid,
         chat_id=  chat_id,
-        sender_id =  chat_exist.ai_id,
+        sender_id = chat_exist.ai_id,
         message =  answer,
     )
 
