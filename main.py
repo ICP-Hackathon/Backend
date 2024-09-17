@@ -250,9 +250,9 @@ def create_chat(chat: schemas.ChatTableCreate, db: Session = Depends(get_db)):
     )
     chatcontentsid = chat_id + '_' + ctime()
     chatContentsTable = schemas.ChatContentsTableCreate(
-        chat_contents_id= chatcontentsid,
+        chat_contents_id= "AI_" + chatcontentsid,
         chat_id = chat_id,
-        sender_id = "AI_" + chat.ai_id,
+        sender_id = chat.ai_id,
         message = "Hello! How Can I assist you?"
     )
 

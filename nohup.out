@@ -8692,3 +8692,32 @@ INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
 INFO:     Finished server process [201536]
 INFO:     Stopping reloader process [167694]
+INFO:     Will watch for changes in these directories: ['/ragcoon/Backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [235606] using WatchFiles
+INFO:     Started server process [235608]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     172.31.5.189:31536 - "GET / HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [235608]
+INFO:     Stopping reloader process [235606]
+INFO:     Will watch for changes in these directories: ['/ragcoon/Backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [235649] using WatchFiles
+INFO:     Started server process [235652]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     172.31.5.189:34026 - "GET /ais/trend/0xf198e18244c884915ce1c407ebb6c4c7809f7d53e06dbd745f60c2c15a0de955/all/0/10 HTTP/1.1" 200 OK
+INFO:     172.31.5.189:34014 - "GET /ais/today_ais/0xf198e18244c884915ce1c407ebb6c4c7809f7d53e06dbd745f60c2c15a0de955 HTTP/1.1" 200 OK
+INFO:     172.31.5.189:34026 - "GET /ais/base/0/10 HTTP/1.1" 200 OK
+INFO:     172.31.37.169:31180 - "GET /users/exists/0x28ccfb7702648d63ea9570f26b4c93ac14b9d427362af9a64add2808efed3560 HTTP/1.1" 200 OK
+INFO:     172.31.37.169:31194 - "GET /ais/trend/0x28ccfb7702648d63ea9570f26b4c93ac14b9d427362af9a64add2808efed3560/all/0/10 HTTP/1.1" 200 OK
+INFO:     172.31.37.169:31180 - "GET /ais/today_ais/0x28ccfb7702648d63ea9570f26b4c93ac14b9d427362af9a64add2808efed3560 HTTP/1.1" 200 OK
+INFO:     172.31.5.189:46654 - "GET /chats/user/0xf198e18244c884915ce1c407ebb6c4c7809f7d53e06dbd745f60c2c15a0de955 HTTP/1.1" 200 OK
+INFO:     172.31.5.189:46654 - "GET /likes/user/0xf198e18244c884915ce1c407ebb6c4c7809f7d53e06dbd745f60c2c15a0de955 HTTP/1.1" 200 OK
+INFO:     172.31.5.189:46654 - "GET /ais/user/0xf198e18244c884915ce1c407ebb6c4c7809f7d53e06dbd745f60c2c15a0de955 HTTP/1.1" 200 OK
+INFO:     172.31.5.189:46654 - "GET /ais/user/0xf198e18244c884915ce1c407ebb6c4c7809f7d53e06dbd745f60c2c15a0de955 HTTP/1.1" 200 OK
+INFO:     172.31.5.189:46654 - "GET /ais/ai_id/0xf198e18244c884915ce1c407ebb6c4c7809f7d53e06dbd745f60c2c15a0de955_Nextjs_Guide HTTP/1.1" 200 OK
