@@ -152,3 +152,4 @@ cython_debug/
 #.idea/
 
 faiss_db
+nohup.out

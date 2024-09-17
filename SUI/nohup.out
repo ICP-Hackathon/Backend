@@ -1,0 +1,13 @@
+Server is listening on port 8080...
+signal: interrupt
+Server is listening on port 8080...
+signerAccount.Address: 0xf5532566bc1021868c009fd142a6a9d868248c4eb9cdf17018e848dfa4956c31
+unexpected end of JSON input
+signerAccount.Address: 0xf5532566bc1021868c009fd142a6a9d868248c4eb9cdf17018e848dfa4956c31
+unexpected end of JSON input
+signerAccount.Address: 0xf5532566bc1021868c009fd142a6a9d868248c4eb9cdf17018e848dfa4956c31
+signerAccount.Address: 0xf5532566bc1021868c009fd142a6a9d868248c4eb9cdf17018e848dfa4956c31
+unexpected end of JSON input
+signerAccount.Address: 0xf5532566bc1021868c009fd142a6a9d868248c4eb9cdf17018e848dfa4956c31
+signal: killed
+Server is listening on port 8080...

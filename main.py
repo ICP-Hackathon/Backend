@@ -23,7 +23,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5000", 'https://nearanddear.ysblockblock.com'],  # 허용할 클라이언트의 도메인
+    allow_origins=["http://localhost:3000", "http://localhost:5000", 'https://suietail.ysblockblock.com'],  # 허용할 클라이언트의 도메인
     allow_credentials=True,
     allow_methods=["*"],  # 허용할 HTTP 메서드 (GET, POST, OPTIONS 등)
     allow_headers=["*"],  # 허용할 헤더
@@ -42,9 +42,6 @@ def read_root():
     return {"Hello": "World"}
 
 ########################### 유저 관련 API ###########################
-@app.get("/users/{offset}/{limit}", response_model=List[schemas.UserTableBase])
-def get_users(offset : int, limit : int, db: Session = Depends(get_db)):
-    return users.get_users(db=db, offset=offset, limit=limit)
 
 @app.get("/users/{user_address}", response_model=schemas.UserTableBase)
 def get_user(user_address : str, db: Session = Depends(get_db)):
@@ -59,6 +56,10 @@ def check_user_exists(user_address : str, db: Session = Depends(get_db)):
 def add_user(user: schemas.UserTableCreate, db: Session = Depends(get_db)):
     suiapi.add_user_creator_consumser(user.user_address)
     return users.add_user(db, user = user)
+
+@app.get("/users/{offset}/{limit}", response_model=List[schemas.UserTableBase])
+def get_users(offset : int, limit : int, db: Session = Depends(get_db)):
+    return users.get_users(db=db, offset=offset, limit=limit)
 
 # @app.put("/users", response_model=schemas.UserTableBase)
 # def update_user(user: schemas.UserTableCreate, db: Session = Depends(get_db)):
