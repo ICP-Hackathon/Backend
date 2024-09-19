@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from DB import users, ais, chats, models, schemas, like
@@ -43,115 +43,103 @@ def read_root():
 
 ########################### 유저 관련 API ###########################
 
+@app.get("/users", response_model=schemas.UserTableList)
+def get_users(
+    offset: int = Query(0, description="Offset for pagination"), 
+    limit: int = Query(10, description="Limit for pagination"), 
+    db: Session = Depends(get_db)
+):
+    res = users.get_users(db=db, offset=offset, limit=limit)
+    return schemas.UserTableList(users=res)
+
 @app.get("/users/{user_address}", response_model=schemas.UserTableBase)
 def get_user(user_address : str, db: Session = Depends(get_db)):
+    check_user = users.check_user_exists(db=db, user_address=user_address)
+    if not check_user:
+        raise HTTPException(status_code=400, detail="User Doesn't Exist")
     return users.get_user(db, user_address=user_address)
 
 @app.get("/users/exists/{user_address}", response_model=bool)
 def check_user_exists(user_address : str, db: Session = Depends(get_db)):
-    res = users.check_user_exists(db = db, user_address=user_address)
-    return res
+    return users.check_user_exists(db = db, user_address=user_address)
 
 @app.post("/users", response_model=schemas.UserTableBase)
-def add_user(user: schemas.UserTableCreate, db: Session = Depends(get_db)):
+def add_user(user: schemas.UserTableBase, db: Session = Depends(get_db)):
+    check_user = users.check_user_exists(db=db, user_address=user.user_address)
+    if check_user:
+        raise HTTPException(status_code=400, detail="User Already Exists")
     suiapi.add_user_creator_consumser(user.user_address)
     return users.add_user(db, user = user)
 
-@app.get("/users/{offset}/{limit}", response_model=schemas.UserTableList)
-def get_users(offset : int, limit : int, db: Session = Depends(get_db)):
-    res = users.get_users(db=db, offset=offset, limit=limit)
-    return schemas.UserTableList(users=res)
-
 @app.put("/users", response_model=schemas.UserTableBase)
-def update_user(user: schemas.UserTableUpdate, db: Session = Depends(get_db)):
+def update_user(user: schemas.UserTableBase, db: Session = Depends(get_db)):
     return users.update_user(db, user_update = user)
 
 ########################### AI 관련 API ###########################
 
-@app.get("/ais/base/{offset}/{limit}", response_model=schemas.AITableListOut)
-def get_ais(offset: int, limit: int, db: Session = Depends(get_db)):
+@app.get("/ais", response_model=schemas.AIOVerviewList)
+def get_ais(
+    offset: int = Query(0, description="Offset for pagination"),  # 기본값 0
+    limit: int = Query(10, description="Limit for pagination"),  # 기본값 10
+    db: Session = Depends(get_db)
+):
     res = ais.get_ais(db=db, offset=offset, limit=limit)
-    return schemas.AITableListOut(ais=res)
+    return res
+
 
 @app.get("/ais/ai_id/{ai_id}", response_model=schemas.AIDetail)
 def get_ai(ai_id: str, db: Session = Depends(get_db)):
-    db_ai = ais.get_ai_detail(db, ai_id=ai_id)
-    if not db_ai:
+    check_ai = ais.check_ai_exists(db, ai_id=ai_id)
+    if not check_ai:
         raise HTTPException(status_code=404, detail="AI not found")
-    return db_ai
+    res = ais.get_ai_detail(db=db, ai_id=ai_id)
+    return res
 
-@app.get("/ais/user/{user_address}", response_model=schemas.AITableListOut)
+@app.get("/ais/user/{user_address}", response_model=schemas.MyAIsOutList)
 def get_user_ais(user_address: str, db: Session = Depends(get_db)):
     res = ais.get_user_ais(db=db, user_address=user_address)
-    return schemas.AITableListOut(ais=res)
-
-@app.get("/ais/{ai_id}/rags", response_model=schemas.RAGTableListOut)
-def get_rags(ai_id: str, db: Session = Depends(get_db)):
-    res = ais.get_rags(db=db, ai_id=ai_id)
-    return schemas.RAGTableListOut(logs=res)
+    return res
 
 #인기있는 AI 보기
-@app.get("/ais/trend/{user_address}/{category}/{offset}/{limit}", response_model=schemas.AIOVerviewList)
-def get_trend_ais(user_address : str, category : str, offset : int, limit : int, db: Session = Depends(get_db), ):
-    return ais.get_category_ais_by_weekly_users(db=db, offset=offset, limit=limit, category=category, user_address= user_address)
+@app.get("/ais/trend/{user_address}/{category}", response_model=schemas.AIOVerviewList)
+def get_trend_ais(
+    user_address: str,
+    category: str,
+    offset: int = Query(0, description="Offset for pagination"),  # 기본값 0
+    limit: int = Query(10, description="Limit for pagination"),  # 기본값 10
+    db: Session = Depends(get_db)
+):
+    return ais.get_category_trend_users(db=db, offset=offset, limit=limit, category=category, user_address=user_address)
 
-@app.get("/ais/today_ais/{user_address}", response_model=schemas.AIOVerviewList)
+@app.get("/ais/today/{user_address}", response_model=schemas.AIOVerviewList)
 def get_today_ais(user_address : str, db: Session = Depends(get_db)):
     res = ais.get_today_ais(db=db, user_address=user_address)
     return res
 
-# @app.get("/ais/search/{ai_name}", response_model=schemas.AISearchListOut)
-# def search_ai(ai_name: str, db: Session = Depends(get_db)):
-#     db_ai = ais.search_ai(db, name=ai_name)
-#     if not db_ai:
-#         raise HTTPException(status_code=404, detail="AI not found")
-#     search_results = [
-#         schemas.AISearch(
-#             name=ai.name,
-#             creator_address=ai.creator_address,
-#             image_url=ai.image_url
-#         ) for ai in db_ai
-#     ]
-#     return schemas.AISearchListOut(ais=search_results)
-@app.get("/ais/search/{ai_name}", response_model=schemas.AISearchListOut)
-def search_ai_by_name(ai_name: str, db: Session = Depends(get_db)):
-    db_ai = ais.search_ai_by_name(db, name=ai_name)
-    if not db_ai:
-        raise HTTPException(status_code=404, detail="AI not found")
-    search_results = [
-        schemas.AISearch(
-            name=ai.name,
-            creator_address=ai.creator_address,
-            image_url=ai.image_url
-        ) for ai in db_ai
-    ]
-    return schemas.AISearchListOut(ais=search_results)
+@app.get("/ais/search/{ai_name}/{user_address}", response_model=schemas.AIOVerviewList)
+def search_ai_by_name(ai_name: str, user_address:str, db: Session = Depends(get_db)):
+    res = ais.search_ai_by_name(db, name=ai_name, user_address=user_address)
+    return res
 
 
 @app.post("/ais", response_model=schemas.AITableBase)
 def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
-    ai_id = ai.creator_address + '_' + ai.name
-
+    ai_id = ai.creator_address + '_' + ai.ai_name
     #먼저 만들어졌었는지 확인
     db_ai = ais.get_ai(db, ai_id=ai_id)
     if db_ai:
         raise HTTPException(status_code=400, detail="AI with this ID already exists")
-
     db_user = users.get_user(db, user_address=ai.creator_address)
     if not db_user:
         raise HTTPException(status_code=400, detail="You are not user")
     
     faiss_id = ai.name + "tx" + str(random.random())
-
     # AI 콘텐츠를 추가하는 로직
     embed = add_text([ai.contents], [{"source" : ai_id}], [faiss_id])
-
     # 블록체인에 ai 생성
     suiapi.add_ai(ai_id=ai_id, creator_address=ai.creator_address)
-
     # blov 저장
     digest = suiapi.add_blob(ai=ai, ai_id=ai_id, embed=embed)
-    
     # AILog 테이블에 로그 기록
     ais.create_rag(db=db, ai_id=ai_id, comments=ai.comments, digest=digest, faiss_id=faiss_id)
     
@@ -162,7 +150,7 @@ def update_ais(ai_update: schemas.AITableUserUpdateInput,db: Session = Depends(g
     db_ai = ais.get_ai(db, ai_id=ai_update.ai_id)
     if not db_ai:
         raise HTTPException(status_code=400, detail="AI Not found")
-    if db_ai.creator_address != ai_update.user_address:
+    if db_ai.creator_address != ai_update.creator_address:
         raise HTTPException(status_code=400, detail="You are not the owner of AI")
 
     # AI 콘텐츠가 변경된 경우 add_text 호출
@@ -176,22 +164,22 @@ def update_ais(ai_update: schemas.AITableUserUpdateInput,db: Session = Depends(g
     
     return ais.update_ai(db=db, ai_id=ai_update.ai_id, ai_update=ai_update)
 
-@app.delete("/ais/{ai_id}/{user_address}", response_model=schemas.AITableBase)
-def delete_ai(ai_id: str, user_address: str, db: Session = Depends(get_db)):
+@app.delete("/ais", response_model=schemas.AITableBase)
+def delete_ai(ai : schemas.AITableDelete, db: Session = Depends(get_db)):
 
-    db_ai = ais.get_ai(db, ai_id=ai_id)
+    db_ai = ais.get_ai(db, ai_id=ai.ai_id)
     if not db_ai:
         raise HTTPException(status_code=404, detail="AI not found")
-    if db_ai.creator_address != user_address:
+    if db_ai.creator_address != ai.creator_address:
         raise HTTPException(status_code=400, detail="You are not the owner of AI")
     
-    deleted_ai = ais.delete_ai(db=db, ai_id=ai_id)
+    deleted_ai = ais.delete_ai(db=db, ai_id=ai.ai_id)
 
-    ai_logs = ais.get_raglogs_by_aiid(db=db, ai_id=ai_id)
+    ai_logs = ais.get_raglogs_by_aiid(db=db, ai_id=ai.ai_id)
     ids = [i.faiss_id for i in ai_logs]
     delete_text(ids)
 
-    ais.delete_raglogs(db=db, ai_id=ai_id)
+    ais.delete_raglogs(db=db, ai_id=ai.ai_id)
 
     if not deleted_ai:
         raise HTTPException(status_code=404, detail="AI not found")
@@ -208,27 +196,25 @@ def delete_ai(ai_id: str, user_address: str, db: Session = Depends(get_db)):
 ########################### Chat 관련 API ###########################
 
 # # 유저 채팅 목록 읽기
-@app.get("/chats/user/{user_address}", response_model=schemas.ChatTableListOut)
+@app.get("/chats/user/{user_address}", response_model=schemas.ChatTableOverViewList)
 def get_chats(user_address: str, db: Session = Depends(get_db)):
     db_chat = chats.get_chats_by_user_address(db, user_address=user_address)
     if not db_chat:
         raise HTTPException(status_code=404, detail="Chat not found")
-    return schemas.ChatTableListOut(chats=db_chat)
+    return db_chat
 
-@app.get("/chats/ai_id/{ai_id}", response_model=schemas.ChatTableListOut)
-def get_chats(ai_id: str, db: Session = Depends(get_db)):
-    db_chat = chats.get_chats_by_ai_id(db, ai_id=ai_id)
-    if not db_chat:
-        raise HTTPException(status_code=404, detail="Chat not found")
-    return schemas.ChatTableListOut(chats=db_chat)
-
+# @app.get("/chats/ai_id/{ai_id}", response_model=schemas.ChatTableOverViewList)
+# def get_chats(ai_id: str, db: Session = Depends(get_db)):
+#     db_chat = chats.get_chats_by_ai_id(db, ai_id=ai_id)
+#     if not db_chat:
+#         raise HTTPException(status_code=404, detail="Chat not found")
+#     return schemas.ChatTableOverViewList(chats=db_chat)
 
 # # 특정 채팅 읽기
 @app.get("/chats/contents/{chat_id}", response_model=schemas.ChatContentsTableListOut)
 def read_chat_content(chat_id: str, db: Session = Depends(get_db)):
-    db_chat_content = chats.get_chat_contents(db, chat_id=chat_id)
-
-    return schemas.ChatContentsTableListOut(chats=db_chat_content)
+    res = chats.get_chat_contents(db, chat_id=chat_id)
+    return res
 
 # # 챗 생성
 @app.post("/chats", response_model=schemas.ChatTableBase)
@@ -260,22 +246,6 @@ def create_chat(chat: schemas.ChatTableCreate, db: Session = Depends(get_db)):
 
     return chats.create_chat(db=db, chat=chatTable)
 
-<<<<<<< HEAD
-
-@app.get("/chat/list/{userid}", response_model=schemas.ChatTableListOut)
-def read_chat(userid: str, db: Session = Depends(get_db)):
-    db_chat = crud.get_chats(db, userid=userid)
-    return schemas.ChatTableListOut(chats=db_chat)
-
-# 채팅 정보 업데이트
-# @app.put("/chats/{chat_id}", response_model=schemas.ChatTableOut)
-# def update_chat(chat_id: str, chat_update: schemas.ChatTableUpdate, db: Session = Depends(get_db)):
-#     updated_chat = crud.update_chat(db=db, chat_id=chat_id, chat_update=chat_update)
-#     if not updated_chat:
-#         raise HTTPException(status_code=404, detail="Chat not found")
-#     return updated_chat
-=======
->>>>>>> 93141005902ec326c18d050b27c10b352e9f2462
 
 # # 채팅 내용 생성
 @app.post("/chats/create_contents/{chat_id}", response_model=schemas.ChatContentsTableBase)

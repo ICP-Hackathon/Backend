@@ -2,121 +2,225 @@ from sqlalchemy.orm import Session
 from . import models, schemas
 from datetime import datetime
 from .like import check_like
+from .users import get_user
+from .chats import check_chat_by_ai_id
+from sqlalchemy import func
+
 
 ################### AITable CRUD functions ###################
 
 def get_ais(db: Session, offset: int, limit: int):
-    return db.query(models.AITable).offset(offset).limit(limit-offset).all()
+    # AITable에서 offset과 limit을 사용하여 AI 목록을 가져옴
+    ai_infos = db.query(models.AITable).offset(offset).limit(limit - offset).all()
+
+    ai_overview_list = []  # 결과를 담을 리스트
+
+    # 각 ai_info에 대해 처리
+    for ai_info in ai_infos:
+        # 유저 정보를 가져옴
+        creator_info = get_user(db=db, user_address=ai_info.creator_address)
+
+        # 유저가 해당 AI를 좋아하는지 여부를 확인
+        like_bool = check_like(db=db, user_address=creator_info.user_address, ai_id=ai_info.ai_id)
+
+        # AIOverview 객체 생성
+        ai_overview = schemas.AIOverview(
+            ai_id=ai_info.ai_id,
+            creator_address=ai_info.creator_address,
+            ai_name=ai_info.ai_name,
+            creator=creator_info.nickname,  # 유저 닉네임을 가져옴
+            like=like_bool,  # 유저가 AI를 좋아하는지 여부
+            image_url= ai_info.image_url,
+            category= ai_info.category
+        )
+
+        # 리스트에 추가
+        ai_overview_list.append(ai_overview)
+
+    # 최종 결과로 AIOVerviewList 반환
+    return schemas.AIOVerviewList(ais=ai_overview_list)
 
 def get_ai(db: Session, ai_id: str):
     return db.query(models.AITable).filter(models.AITable.ai_id == ai_id).first()
+    
 
-def get_user_ais(db: Session, user_address : str):
-    return db.query(models.AITable).filter(models.AITable.creator_address == user_address).all()
+def get_user_ais(db: Session, user_address: str):
+    # 유저가 만든 AI 리스트를 가져옵니다
+    ai_infos = db.query(models.AITable).filter(models.AITable.creator_address == user_address).all()
+
+    my_ais_list = []  # 각 ai_info에 대한 MyAIsOut 객체를 담을 리스트
+
+    for ai_info in ai_infos:
+        # 각 ai_info에 대한 usage(토큰 사용량) 계산
+        check_chat = check_chat_by_ai_id(db=db, ai_id=ai_info.ai_id)
+        if check_chat:
+            usage = db.query(
+                func.sum(models.ChatContentsTable.prompt_tokens + models.ChatContentsTable.completion_tokens))\
+                .join(models.ChatTable, models.ChatContentsTable.chat_id == models.ChatTable.chat_id)\
+                .filter(models.ChatTable.ai_id == ai_info.ai_id)\
+                .scalar()
+            print(usage)
+            # 만약 usage 값이 None이면 0으로 설정 (사용 기록이 없을 때 대비)
+            usage = usage or 0
+        else:
+            usage = 0
+                    # MyAIsOut 객체 생성
+        my_ais = schemas.MyAIsOut(
+            ai_id=ai_info.ai_id,
+            creator_address=ai_info.creator_address,
+            created_at=ai_info.created_at,
+            ai_name=ai_info.ai_name,
+            image_url=ai_info.image_url,
+            category=ai_info.category,
+            introductions=ai_info.introductions,
+            usage=usage  # 계산된 usage 값을 추가
+        )
+
+        # my_ais_list에 추가
+
+        my_ais_list.append(my_ais)
+
+    # AIOVerviewList에 담아 반환
+    return schemas.MyAIsOutList(ais=my_ais_list)
+
 
 def get_rags(db: Session, ai_id: str):
     return db.query(models.RAGTable).filter(models.AITable.ai_id == ai_id).all()
 
+def check_ai_exists(db: Session, ai_id: str):
+    res =  db.query(models.AITable).filter(models.AITable.ai_id == ai_id).first()
+    if res:
+        return True
+    else:
+        return False
+
 def get_ai_detail(db: Session, ai_id: str) -> schemas.AIDetail:
     # AITable과 RAGTable을 ai_id로 조인
-    result = (
-        db.query(models.AITable, models.RAGTable)
-        .join(models.RAGTable, models.AITable.ai_id == models.RAGTable.ai_id)
-        .filter(models.AITable.ai_id == ai_id)
-        .all()
-    )
-    
-    if not result:
-        return None  # 해당 ai_id에 대한 데이터가 없는 경우 처리
-    
-    # AITable 정보는 첫 번째 레코드에서 가져옵니다
-    ai, _ = result[0]
+    ai_info = get_ai(db=db, ai_id=ai_id)
+    user_info = get_user(db=db, user_address=ai_info.creator_address)
+    rag_info = get_raglogs_by_aiid(db=db, ai_id=ai_id)
 
     # RAGTable 데이터는 모든 레코드에서 logs로 변환합니다
-    logs = [schemas.RAGTableBase.model_validate(rag) for _, rag in result]
+    logs = [schemas.RAGTableBase(**rag.__dict__) for rag in rag_info]
 
     # AIDetail 스키마로 반환
     ai_detail = schemas.AIDetail(
-        ai_id=ai.ai_id,
-        creator_address=ai.creator_address,
-        created_at=ai.created_at,
-        name=ai.name,
-        image_url=ai.image_url,
-        category=ai.category,
-        introductions=ai.introductions,
-        chat_counts=ai.chat_counts,
-        prompt_tokens=ai.prompt_tokens,
-        completion_tokens=ai.completion_tokens,
-        weekly_users=ai.weekly_users,
+        ai_id=ai_id,
+        creator_address=ai_info.creator_address,
+        created_at=ai_info.created_at,
+        creator = user_info.nickname,
+        ai_name=ai_info.ai_name,
+        image_url=ai_info.image_url,
+        category=ai_info.category,
+        introductions=ai_info.introductions,
         logs=logs  # logs는 RAGTableBase 리스트로 설정
     )
     
     return ai_detail
 
-
-def get_ais_by_weekly_users(db: Session, offset: int, limit : int):
-    return db.query(models.AITable).order_by(models.AITable.weekly_users.desc()).offset(offset).limit(limit - offset).all()
-
 def get_today_ais(db: Session, user_address:str):
     # Join the tables and fetch the data
 
-    res = db.query(models.AITable, models.UserTable)\
-        .join(models.UserTable, models.AITable.creator_address == models.UserTable.user_address)\
-        .order_by(models.AITable.weekly_users.desc())\
-        .limit(4)\
-        .all()
-    ai_overview_list = []
-    for ai, user in res:
-        like_bool = check_like(db=db, user_address=user_address, ai_id = ai.ai_id)
+    ai_infos = db.query(models.AITable).order_by(models.AITable.created_at.desc()).limit(4).all()
+
+    ai_overview_list = []  # 결과를 담을 리스트
+
+    # 각 ai_info에 대해 처리
+    for ai_info in ai_infos:
+        # 유저 정보를 가져옴
+        creator_info = get_user(db=db, user_address=ai_info.creator_address)
+        # 유저가 해당 AI를 좋아하는지 여부를 확인
+        like_bool = check_like(db=db, user_address=user_address, ai_id=ai_info.ai_id)
+
+        # AIOverview 객체 생성
         ai_overview = schemas.AIOverview(
-            ai_id=ai.ai_id,
-            creator_address=ai.creator_address,
-            name=ai.name,
-            creator=user.nickname,  # Assuming `nickname` is the creator's name
-            like=like_bool  # Since there is a `LikeTable` entry, the user liked this AI
+            ai_id=ai_info.ai_id,
+            creator_address=ai_info.creator_address,
+            ai_name=ai_info.ai_name,
+            creator=creator_info.nickname,  # 유저 닉네임을 가져옴
+            like=like_bool,  # 유저가 AI를 좋아하는지 여부
+            image_url= ai_info.image_url,
+            category= ai_info.category
         )
+
+        # 리스트에 추가
         ai_overview_list.append(ai_overview)
 
-    return schemas.AIOVerviewList(ais=ai_overview_list)    
-
-
-
+    # 최종 결과로 AIOVerviewList 반환
+    return schemas.AIOVerviewList(ais=ai_overview_list) 
     
-def get_category_ais_by_weekly_users(db: Session, offset: int, limit : int, category:str, user_address):
-    if category == "all":
-        res = db.query(models.AITable, models.UserTable)\
-            .join(models.UserTable, models.AITable.creator_address == models.UserTable.user_address)\
-            .order_by(models.AITable.weekly_users.desc())\
-            .offset(offset)\
-            .limit(limit - offset)\
-            .all()
-    else :
-        res = db.query(models.AITable, models.UserTable)\
-            .join(models.UserTable, models.AITable.creator_address == models.UserTable.user_address)\
-            .filter(models.AITable.category == category)\
-            .order_by(models.AITable.weekly_users.desc())\
-            .offset(offset)\
-            .limit(limit - offset)\
-            .all()
-    
+def get_category_trend_users(db: Session, offset: int, limit : int, category:str, user_address):
+    query = db.query(
+        models.AITable,
+        func.count(models.ChatTable.daily_user_access).label('daily_user_access_count')
+    ).join(
+        models.ChatTable, models.AITable.ai_id == models.ChatTable.ai_id
+    ).filter(
+        models.ChatTable.daily_user_access == True  # daily_user_access가 True인 경우만 필터링
+    ).group_by(
+        models.AITable.ai_id
+    ).order_by(
+        func.count(models.ChatTable.daily_user_access).desc()  # daily_user_access가 True인 AI를 기준으로 내림차순 정렬
+    )
+
+    # 카테고리가 "all"이 아닌 경우에만 필터 추가
+    if category != "all":
+        query = query.filter(models.AITable.category == category)
+
+    # 페이지네이션 적용
+    res = query.offset(offset).limit(limit - offset).all()
+
     ai_overview_list = []
-    for ai, user in res:
-        like_bool = check_like(db=db, user_address=user_address, ai_id = ai.ai_id)
+
+    for ai_info, daily_user_access_count in res:
+        # 해당 유저가 이 AI를 좋아하는지 여부 확인
+        creator_info = get_user(db=db, user_address=ai_info.creator_address)
+        like_bool = check_like(db=db, user_address=user_address, ai_id=ai_info.ai_id)
+        # AIOverview 객체 생성
         ai_overview = schemas.AIOverview(
-            ai_id=ai.ai_id,
-            creator_address=ai.creator_address,
-            name=ai.name,
-            creator=user.nickname,  # Assuming `nickname` is the creator's name
-            like=like_bool  # Since there is a `LikeTable` entry, the user liked this AI
+            ai_id=ai_info.ai_id,
+            creator_address=ai_info.creator_address,
+            ai_name=ai_info.ai_name,
+            creator=creator_info.nickname,  # 유저 닉네임을 가져옴
+            like=like_bool,  # 유저가 AI를 좋아하는지 여부
+            image_url= ai_info.image_url,
+            category= ai_info.category
         )
+
+
         ai_overview_list.append(ai_overview)
+
+    # 최종 결과로 AIOVerviewList 반환
     return schemas.AIOVerviewList(ais=ai_overview_list)
 
 # def search_ai(db: Session, name: str):
 #     return db.query(models.AITable).filter(models.AITable.name.like(f"%{name}%")).all()
-def search_ai_by_name(db: Session, name: str):
-    return db.query(models.AITable).filter(models.AITable.name.like(f"%{name}%")).all()
+def search_ai_by_name(db: Session, name: str, user_address : str):
+    ai_infos = db.query(models.AITable).filter(models.AITable.ai_name.like(f"%{name}%")).all()
+    ai_overview_list = []  # 결과를 담을 리스트
+    # 각 ai_info에 대해 처리
+    for ai_info in ai_infos:
+        # 유저 정보를 가져옴
+        creator_info = get_user(db=db, user_address=ai_info.creator_address)
+        # 유저가 해당 AI를 좋아하는지 여부를 확인
+        like_bool = check_like(db=db, user_address=user_address, ai_id=ai_info.ai_id)
 
+        # AIOverview 객체 생성
+        ai_overview = schemas.AIOverview(
+            ai_id=ai_info.ai_id,
+            creator_address=ai_info.creator_address,
+            ai_name=ai_info.ai_name,
+            creator=creator_info.nickname,  # 유저 닉네임을 가져옴
+            like=like_bool,  # 유저가 AI를 좋아하는지 여부
+            image_url= ai_info.image_url,
+            category= ai_info.category
+        )
+
+        # 리스트에 추가
+        ai_overview_list.append(ai_overview)
+
+    # 최종 결과로 AIOVerviewList 반환
+    return schemas.AIOVerviewList(ais=ai_overview_list) 
 # # AITable CRUD functions
 # def get_top_10_ai_by_usage(db: Session):
 #     return db.query(models.AITable).order_by(models.AITable.usage.desc()).limit(10).all()
@@ -126,14 +230,10 @@ def create_ai(db: Session,ai_id:str, ai: schemas.AITableCreate):
         ai_id = ai_id,
         creator_address =  ai.creator_address,
         created_at = datetime.now(),
-        name = ai.name,
+        ai_name = ai.ai_name,
         image_url = ai.image_url,
         category = ai.category,
         introductions = ai.introductions,
-        chat_counts=0,
-        prompt_tokens=0,
-        completion_tokens=0,
-        weekly_users = 0
     )
 
     db_ai = models.AITable(**aiDB.model_dump())
@@ -144,7 +244,7 @@ def create_ai(db: Session,ai_id:str, ai: schemas.AITableCreate):
 
 def update_ai(db: Session, ai_id: str, ai_update: schemas.AITableUserUpdateInput):
     aiUpdateDB = schemas.AITableUpdate(
-        name = ai_update.name,
+        name = ai_update.ai_name,
         image_url = ai_update.image_url,
         category= ai_update.category,  # 카테고리 필드, None이 기본값
         introductions=ai_update.introductions  # 소개 필드, None이 기본값
@@ -153,15 +253,6 @@ def update_ai(db: Session, ai_id: str, ai_update: schemas.AITableUserUpdateInput
     db_ai = get_ai(db, ai_id)
     if db_ai:
         for key, value in aiUpdateDB.model_dump(exclude_unset=True).items():
-            setattr(db_ai, key, value)
-        db.commit()
-        db.refresh(db_ai)
-    return db_ai
-
-def update_usage_ai(db: Session, ai_id: str, ai_update: schemas.AITableUsageUpdate):
-    db_ai = get_ai(db, ai_id)
-    if db_ai:
-        for key, value in ai_update.model_dump(exclude_unset=True).items():
             setattr(db_ai, key, value)
         db.commit()
         db.refresh(db_ai)
