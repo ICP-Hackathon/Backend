@@ -259,6 +259,12 @@ def read_chat(userid: str, db: Session = Depends(get_db)):
     db_chat = crud.get_chats(db, userid=userid)
     return schemas.ChatTableListOut(chats=db_chat)
 
+
+@app.get("/chat/list/{userid}", response_model=schemas.ChatTableListOut)
+def read_chat(userid: str, db: Session = Depends(get_db)):
+    db_chat = crud.get_chats(db, userid=userid)
+    return schemas.ChatTableListOut(chats=db_chat)
+
 # 채팅 정보 업데이트
 # @app.put("/chats/{chat_id}", response_model=schemas.ChatTableOut)
 # def update_chat(chat_id: str, chat_update: schemas.ChatTableUpdate, db: Session = Depends(get_db)):
