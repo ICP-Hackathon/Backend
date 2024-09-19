@@ -1,40 +1,43 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
+from .users import get_user
 
 # # ChatTable CRUD functions
 def get_chat(db: Session, chat_id: str):
     return db.query(models.ChatTable).filter(models.ChatTable.chat_id == chat_id).first()
 
+def check_chat_by_ai_id(db: Session, ai_id: str):
+    res = db.query(models.ChatTable).filter(models.ChatTable.ai_id == ai_id).all()
+    if res:
+        return True
+    else:
+        return False
+    
 def get_chats_by_user_address(db: Session, user_address: str):
-    # Perform the join query and extract the necessary fields
+    # Join AITable and ChatTable, filter by user_address
     results = (
         db.query(models.ChatTable, models.AITable)
-        .join(models.AITable, models.ChatTable.ai_id == models.AITable.ai_id)  # Explicit join condition
+        .join(models.AITable, models.ChatTable.ai_id == models.AITable.ai_id)
         .filter(models.ChatTable.user_address == user_address)
         .all()
     )
-    
-    # Combine the data into a single response format
-    chats = []
-    for chat, ai in results:
-        chat_data = {
-            'chat_id': chat.chat_id,
-            'ai_id': chat.ai_id,
-            'user_address': chat.user_address,
-            'name': ai.name,
-            'category': ai.category,
-            'creator_address': ai.creator_address,
-            'created_at': ai.created_at,
-            'image_url': ai.image_url,
-            'introductions': ai.introductions,
-            'chat_counts': ai.chat_counts,
-            'prompt_tokens': ai.prompt_tokens,
-            'completion_tokens': ai.completion_tokens,
-            'weekly_users': ai.weekly_users,
-        }
-        chats.append(chat_data)
-    
-    return chats
+
+    # Use a list comprehension to build the chat overview list
+    chats = [
+        schemas.ChatTableOverView(
+            chat_id=chat_info.chat_id,
+            ai_id=chat_info.ai_id,
+            category=ai_info.category,
+            creator_address=ai_info.creator_address,
+            image_url=ai_info.image_url,
+            ai_name=ai_info.ai_name,
+            creator=get_user(db=db, user_address=ai_info.creator_address).nickname,  # Retrieve creator's nickname
+        )
+        for chat_info, ai_info in results
+    ]
+
+    return schemas.ChatTableOverViewList(chats=chats)
+
 
 def get_chats_by_ai_id(db: Session, ai_id: str):
     # Perform the join query and extract the necessary fields
@@ -93,7 +96,13 @@ def create_chat(db: Session, chat: schemas.ChatTableBase):
 
 # # ChatContentsTable CRUD functions
 def get_chat_contents(db: Session, chat_id: str):
-    return db.query(models.ChatContentsTable).filter(models.ChatContentsTable.chat_id == chat_id).all()
+    chat_info = get_chat(db=db, chat_id=chat_id)
+    if not chat_info.daily_user_access:
+        chat_info.daily_user_access = True
+        db.commit()  # 변경 사항을 DB에 반영
+        db.refresh(chat_info)
+    res = db.query(models.ChatContentsTable).filter(models.ChatContentsTable.chat_id == chat_id).all()
+    return schemas.ChatContentsTableListOut(chats = res)
 
 
 def create_chat_content(db: Session, chat_content: schemas.ChatContentsTableCreate):

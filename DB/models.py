@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Time, Text, Float, func, DateTime
+from sqlalchemy import Column, Integer, String, Time, Text, Float, func, DateTime, Boolean
 from datetime import datetime
 from DB.database import Base
 
@@ -10,7 +10,7 @@ class UserTable(Base):
     nickname = Column(String, nullable=True)
     gender = Column(String, nullable=True)
     country = Column(String, nullable=True)
-    phone = Column(String, nullable=True)
+    interest = Column(String, nullable=True)
 
 class AITable(Base):
     __tablename__ = "aitable"
@@ -18,14 +18,10 @@ class AITable(Base):
     ai_id = Column(String, nullable=False, primary_key=True)
     creator_address = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.now(), nullable=True)  # Use DateTime instead of String
-    name = Column(String, nullable=True)
+    ai_name = Column(String, nullable=True)
     image_url = Column(String, nullable=True)
     category = Column(String, nullable=True)
     introductions = Column(String, nullable=True)
-    chat_counts = Column(Integer, nullable=True)
-    prompt_tokens = Column(Float, nullable=True)
-    completion_tokens = Column(Float, nullable=True)
-    weekly_users = Column(Integer, nullable=True)
 
 class RAGTable(Base):
     __tablename__ = "ragtable"
@@ -43,6 +39,8 @@ class ChatTable(Base):
     chat_id = Column(String, nullable=False, primary_key=True)
     ai_id = Column(String, nullable=False)
     user_address = Column(String, nullable=False)
+    daily_user_access = Column(Boolean, nullable=True)
+
 
 class ChatContentsTable(Base):
     __tablename__ = "chatcontentstable"
@@ -52,6 +50,8 @@ class ChatContentsTable(Base):
     created_at = Column(DateTime, default=datetime.now(), nullable=True)  # Use DateTime instead of String
     sender_id = Column(String, nullable=True)
     message = Column(Text, nullable=True)
+    prompt_tokens = Column(Float, nullable=True)
+    completion_tokens = Column(Float, nullable=True)
 
 class LikeTable(Base):
     __tablename__ = "liketable"

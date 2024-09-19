@@ -10,22 +10,9 @@ class UserTableBase(BaseModel):
     image_url: Optional[str] = None
     gender: Optional[str] = None
     country: Optional[str] = None
-    phone: Optional[str] = None
+    interest: Optional[str] = None
     class Config:
         from_attributes = True
-
-class UserTableUpdate(BaseModel):
-    user_address: str
-    image_url: Optional[str] = None
-    gender: Optional[str] = None
-    country: Optional[str] = None
-    phone: Optional[str] = None
-    class Config:
-        from_attributes = True
-
-class UserTableCreate(UserTableUpdate):
-    nickname: Optional[str] = '0.0' 
-    pass
 
 class UserTableList(BaseModel):
     users : List[UserTableBase]
@@ -38,14 +25,10 @@ class AITableBase(BaseModel):
     ai_id: str
     creator_address: Optional[str] = None
     created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
-    name: Optional[str] = None
+    ai_name: Optional[str] = None
     image_url: Optional[str] = None
     category: Optional[str] = None
     introductions: Optional[str] = None
-    chat_counts : Optional[int] = None
-    prompt_tokens : Optional[float] = None
-    completion_tokens : Optional[float] = None
-    weekly_users : Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -53,8 +36,10 @@ class AITableBase(BaseModel):
 class AIOverview(BaseModel):
     ai_id: str
     creator_address: Optional[str] = None
-    name: Optional[str] = None
+    image_url: Optional[str] = None
+    ai_name: Optional[str] = None
     creator: Optional[str] = None
+    category: Optional[str] = None
     like : Optional[bool] = False
     class Config:
         from_attributes = True
@@ -66,62 +51,35 @@ class AIOVerviewList(BaseModel):
 
 class AITableCreate(BaseModel):
     creator_address: Optional[str] = None
-    name: Optional[str] = None
+    ai_name: Optional[str] = None
     image_url: Optional[str] = None
     category: Optional[str] = None
     introductions: Optional[str] = None
     contents: Optional[str] = None
     comments: Optional[str] = None
+    
+class AITableDelete(BaseModel):
+    ai_id: str
+    creator_address: str
 
-class AITableOut(AITableBase):
-    creator: Optional[str] = None
-    class Config:
-        from_attributes = True
-
-class AITableUserUpdateInput(BaseModel):
-    ai_id : Optional[str] = None
-    user_address : Optional[str] = None
-    name: Optional[str] = None
-    image_url: Optional[str] = None
-    category: Optional[str] = None
-    introductions: Optional[str] = None
+class AITableUserUpdateInput(AITableBase):
     contents: Optional[str] = None
     comments: Optional[str] = None
 
 class AITableUpdate(BaseModel):
-    name: Optional[str] = None
+    ai_name: Optional[str] = None
     image_url: Optional[str] = None
     category: Optional[str] = None
     introductions: Optional[str] = None
 
-class AITableUsageUpdate(BaseModel):
-    chat_counts : Optional[int] = None
-    prompt_tokens : Optional[float] = None
-    completion_tokens : Optional[float] = None
-    weekly_users : Optional[int] = None
 
+class MyAIsOut(AITableBase):
+    usage : Optional[int] = 0
 
-class AITableListOut(BaseModel):
-    ais: List[AITableOut]
+class MyAIsOutList(BaseModel):
+    ais : List[MyAIsOut]
     class Config:
         from_attributes = True
-
-
-# class AITableListOut(BaseModel):
-#     ais: List[AITableBase]
-#     class Config:
-#         from_attributes = True
-
-class AISearch(BaseModel):
-    name: Optional[str] = None
-    creator_address: Optional[str] = None
-    image_url: Optional[str] = None
-        
-class AISearchListOut(BaseModel):
-    ais : List[AISearch]
-    class Config:
-        from_attributes = True
-
 
 # AILogTable 스키마
 
@@ -150,20 +108,9 @@ class RAGTableListOut(BaseModel):
     class Config:
         from_attributes = True
 
-class AIDetail(BaseModel):
-    ai_id: str
-    creator_address: Optional[str] = None
-    created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
-    name: Optional[str] = None
-    image_url: Optional[str] = None
-    category: Optional[str] = None
-    introductions: Optional[str] = None
-    chat_counts : Optional[int] = 0
-    prompt_tokens : Optional[float] = 0
-    completion_tokens : Optional[float] = 0
-    weekly_users : Optional[int] = 0
+class AIDetail(AITableBase):
+    creator : Optional[str] = None
     logs: List[RAGTableBase]
-
     class Config:
         from_attributes = True
 
@@ -172,15 +119,7 @@ class ChatTableBase(BaseModel):
     chat_id: str
     ai_id: Optional[str] = None
     user_address: Optional[str] = None
-    
-    class Config:
-        from_attributes = True
-
-class ChatTableOut(AITableBase):
-    chat_id: str
-    ai_id: Optional[str] = None
-    user_address: Optional[str] = None
-    
+    daily_user_access : Optional[bool] = False
     class Config:
         from_attributes = True
 
@@ -188,11 +127,23 @@ class ChatTableCreate(BaseModel):
     ai_id: Optional[str] = None
     user_address: Optional[str] = None
 
-class ChatTableListOut(BaseModel):
-    chats: List[ChatTableOut]
+class ChatTableOverView(BaseModel):
+    chat_id : Optional[str] = None
+    ai_id : Optional[str] = None
+    category : Optional[str] = None
+    bool_like : Optional[bool] = False
+    creator_address: Optional[str] = None
+    image_url: Optional[str] = None
+    ai_name: Optional[str] = None
+    creator: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+class ChatTableOverViewList(BaseModel):
+    chats : List[ChatTableOverView]
+    class Config:
+        from_attributes = True    
 
 # ChatContentsTable 스키마
 class ChatContentsTableBase(BaseModel):
@@ -201,6 +152,8 @@ class ChatContentsTableBase(BaseModel):
     created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
     sender_id: Optional[str] = None
     message: Optional[str] = None
+    prompt_tokens : Optional[int] = 0
+    completion_tokens : Optional[int] = 0
     class Config:
         from_attributes = True
 
@@ -213,6 +166,8 @@ class ChatContentsTableCreate(BaseModel):
     chat_id: Optional[str] = None
     sender_id: Optional[str] = None
     message: Optional[str] = None
+    prompt_tokens : Optional[int] = 0
+    completion_tokens : Optional[int] = 0
 
 class ChatContentsTableListOut(BaseModel):
     chats: List[ChatContentsTableBase]
@@ -236,13 +191,12 @@ class LikeTableBase(BaseModel):
 class LikeTableCreate(BaseModel):
     user_address: str
     ai_id: str
-
     class Config:
         from_attributes = True
 
 class LikedAIOut(LikeTableBase):
     creator_address: Optional[str] = None
-    name: Optional[str] = None
+    ai_name: Optional[str] = None
     image_url: Optional[str] = None
     category: Optional[str] = None
     class Config:
