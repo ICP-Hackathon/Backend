@@ -110,6 +110,8 @@ class RAGTableListOut(BaseModel):
 
 class AIDetail(AITableBase):
     creator : Optional[str] = None
+    chatcount : Optional[int] = None
+    usage : Optional[int] = None
     logs: List[RAGTableBase]
     class Config:
         from_attributes = True
@@ -119,7 +121,7 @@ class ChatTableBase(BaseModel):
     chat_id: str
     ai_id: Optional[str] = None
     user_address: Optional[str] = None
-    daily_user_access : Optional[bool] = False
+    daily_user_access : Optional[bool] = True
     class Config:
         from_attributes = True
 

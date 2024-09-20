@@ -133,7 +133,7 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     if not db_user:
         raise HTTPException(status_code=400, detail="You are not user")
     
-    faiss_id = ai.name + "tx" + str(random.random())
+    faiss_id = ai.ai_name + "tx" + str(random.random())
     # AI 콘텐츠를 추가하는 로직
     embed = add_text([ai.contents], [{"source" : ai_id}], [faiss_id])
     # 블록체인에 ai 생성
@@ -155,7 +155,7 @@ def update_ais(ai_update: schemas.AITableUserUpdateInput,db: Session = Depends(g
 
     # AI 콘텐츠가 변경된 경우 add_text 호출
     if ai_update.contents != "":
-        faiss_id = db_ai.name + "tx" + str(random.random())
+        faiss_id = db_ai.ai_name + "tx" + str(random.random())
         embed = add_text([ai_update.contents], [{"source" : ai_update.ai_id}], [faiss_id])
 
         digest = suiapi.add_blob(ai=db_ai, ai_id=ai_update.ai_id, embed=embed)
@@ -236,9 +236,9 @@ def create_chat(chat: schemas.ChatTableCreate, db: Session = Depends(get_db)):
     )
     chatcontentsid = chat_id + '_' + ctime()
     chatContentsTable = schemas.ChatContentsTableCreate(
-        chat_contents_id= chatcontentsid,
+        chat_contents_id= "AI_" +chatcontentsid,
         chat_id = chat_id,
-        sender_id = "AI_" + chat.ai_id,
+        sender_id = chat.ai_id,
         message = "Hello! How Can I assist you?"
     )
 
@@ -323,8 +323,8 @@ def create_like(likes: schemas.LikeTableCreate, db: Session = Depends(get_db)):
 
 # Delete a like for an AI by a user
 @app.delete("/likes", response_model=bool)
-def delete_like(user_address: str, ai_id: str, db: Session = Depends(get_db)):
-    success = like.delete_user_like_ai(db, user_address=user_address, ai_id=ai_id)
+def delete_like(likes: schemas.LikeTableCreate, db: Session = Depends(get_db)):
+    success = like.delete_user_like_ai(db, user_address=likes.user_address, ai_id=likes.ai_id)
     if not success:
         raise HTTPException(status_code=404, detail="Like not found or already deleted")
     return success

@@ -15,7 +15,7 @@ def get_user_like_ais(db: Session, user_address: str):
             user_address=like.user_address,
             ai_id=ai.ai_id,
             creator_address=ai.creator_address,
-            name=ai.name,
+            ai_name=ai.ai_name,
             image_url=ai.image_url,
             category=ai.category,
         )

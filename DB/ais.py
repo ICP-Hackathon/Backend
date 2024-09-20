@@ -100,6 +100,16 @@ def get_ai_detail(db: Session, ai_id: str) -> schemas.AIDetail:
     user_info = get_user(db=db, user_address=ai_info.creator_address)
     rag_info = get_raglogs_by_aiid(db=db, ai_id=ai_id)
 
+    chat_count = db.query(models.ChatTable).filter(models.ChatTable.ai_id == ai_id).filter(models.ChatTable.daily_user_access == True).count()
+    usage = db.query(
+                func.sum(models.ChatContentsTable.prompt_tokens + models.ChatContentsTable.completion_tokens))\
+                .join(models.ChatTable, models.ChatContentsTable.chat_id == models.ChatTable.chat_id)\
+                .filter(models.ChatTable.ai_id == ai_info.ai_id)\
+                .scalar()
+    print(usage)
+            # 만약 usage 값이 None이면 0으로 설정 (사용 기록이 없을 때 대비)
+    usage = usage or 0
+
     # RAGTable 데이터는 모든 레코드에서 logs로 변환합니다
     logs = [schemas.RAGTableBase(**rag.__dict__) for rag in rag_info]
 
@@ -113,6 +123,8 @@ def get_ai_detail(db: Session, ai_id: str) -> schemas.AIDetail:
         image_url=ai_info.image_url,
         category=ai_info.category,
         introductions=ai_info.introductions,
+        chatcount= chat_count,
+        usage = usage,
         logs=logs  # logs는 RAGTableBase 리스트로 설정
     )
     
