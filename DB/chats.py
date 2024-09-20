@@ -94,15 +94,27 @@ def create_chat(db: Session, chat: schemas.ChatTableBase):
 #         db.commit()
 #     return db_chat
 
+
+def check_chat_exists(db: Session, chat_id: str):
+    res = db.query(models.ChatTable).filter(models.ChatTable.chat_id == chat_id).first()
+    if res:
+        return True
+    else:
+        return False
+
 # # ChatContentsTable CRUD functions
 def get_chat_contents(db: Session, chat_id: str):
-    chat_info = get_chat(db=db, chat_id=chat_id)
-    if not chat_info.daily_user_access:
-        chat_info.daily_user_access = True
-        db.commit()  # 변경 사항을 DB에 반영
-        db.refresh(chat_info)
-    res = db.query(models.ChatContentsTable).filter(models.ChatContentsTable.chat_id == chat_id).all()
-    return schemas.ChatContentsTableListOut(chats = res)
+    check_chat = check_chat_exists(db=db, chat_id=chat_id)  # 여기서 'chat_id=str' 대신 'chat_id=chat_id'
+    if check_chat:
+        chat_info = get_chat(db=db, chat_id=chat_id)
+        if not chat_info.daily_user_access:
+            chat_info.daily_user_access = True
+            db.commit()  # 변경 사항을 DB에 반영
+            db.refresh(chat_info)
+        res = db.query(models.ChatContentsTable).filter(models.ChatContentsTable.chat_id == chat_id).all()
+    else:
+        res = []
+    return schemas.ChatContentsTableListOut(chats=res)
 
 
 def create_chat_content(db: Session, chat_content: schemas.ChatContentsTableCreate):
