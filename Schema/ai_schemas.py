@@ -19,3 +19,6 @@ class AIRead(base_schemas.AI):
     total_prompt_token_usage: int
     total_completion_token_usage: int
     total_token_usage: int
+
+class AIReadList(BaseModel):
+    ais : List[AIRead]

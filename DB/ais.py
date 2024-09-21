@@ -58,3 +58,15 @@ def get_ai_overview(db: Session, ai_id: str) -> ai_schemas.AIRead:
     )
     
     return ai_read
+
+def get_ai_overviews(db: Session, offset: int, limit: int) -> ai_schemas.AIReadList:
+    ai_overview_list: List[ai_schemas.AIRead] = []  # 결과를 담을 리스트
+
+    # AITable에서 offset과 limit을 사용하여 AI 목록을 가져옴
+    ais = db.query(models.AITable).offset(offset).limit(limit - offset).all()
+    for ai in ais:
+        ai_overview = get_ai_overview(db=db, ai_id=ai.id)
+        ai_overview_list.append(ai_overview)
+
+    # 최종 결과로 AIOVerviewList 반환
+    return ai_schemas.AIReadList(ais=ai_overview_list)
