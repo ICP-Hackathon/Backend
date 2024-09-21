@@ -101,3 +101,18 @@ def search_ai_by_name(db: Session, name: str, user_address : str) -> ai_schemas.
 
     # 최종 결과로 AIOVerviewList 반환
     return ai_schemas.AIReadList(ais=ai_list) 
+
+# def update_ai(db: Session, ai_update: ai_schemas.AIUpdate):
+
+#     update_data = ai_update.model_dump(exclude_unset=True)
+#     db_ai = db.query(models.AITable).filter(models.AITable.id == ai_update.id).update(update_data)
+#     db.commit()
+#     db.refresh(db_ai)
+
+#     # if db_ai:
+#     #     for key, value in ai_update.model_dump(exclude_unset=True).items():
+#     #         if hasattr(db_ai, key):  # db_ai에 속성이 있을 경우만 업데이트
+#     #             setattr(db_ai, key, value)
+#     #     db.commit()
+#     #     db.refresh(db_ai)
+#     return db_ai

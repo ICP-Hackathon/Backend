@@ -24,3 +24,13 @@ class AIRead(base_schemas.AI):
 
 class AIReadList(BaseModel):
     ais : List[AIRead]
+
+class AIUpdate(BaseModel):
+    id: str
+    creator_address: str
+    name: Optional[str] = None
+    profile_image_url: Optional[str] = None
+    category: Optional[str] = None
+    introductions: Optional[str] = None
+    rag_contents: Optional[str] = None
+    rag_comments: Optional[str] = None

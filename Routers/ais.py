@@ -85,24 +85,28 @@ def create_ai(ai: ai_schemas.AICreate, db: Session = Depends(utils.get_db)):
     
     return ais.create_ai(db=db, ai_id=ai_id, ai=ai)
 
-# @router.put("/ais", response_model= schemas.AI)
-# def update_ais(ai_update: schemas.AITableUserUpdateInput,db: Session = Depends(utils.get_db)):
-#     db_ai = ais.get_ai(db, ai_id=ai_update.ai_id)
-#     if not db_ai:
+# @router.put("/", response_model= ai_schemas.AIUpdate)
+# def update_ai(ai_update: ai_schemas.AIUpdate, db: Session = Depends(utils.get_db)):
+#     ai_exists = ais.check_ai_exists(db=db, ai_id=ai_update.id)
+#     if not ai_exists:
 #         raise HTTPException(status_code=400, detail="AI Not found")
-#     if db_ai.creator_address != ai_update.creator_address:
+
+#     ai = ais.get_ai_by_id(db, ai_id=ai_update.id)
+#     if ai.creator_address != ai_update.creator_address:
 #         raise HTTPException(status_code=400, detail="You are not the owner of AI")
 
 #     # AI 콘텐츠가 변경된 경우 add_text 호출
-#     if ai_update.contents != "":
-#         faiss_id = db_ai.ai_name + "tx" + str(random.random())
-#         embed = add_text([ai_update.contents], [{"source" : ai_update.ai_id}], [faiss_id])
+#     if ai_update.rag_contents != "" and ai_update.rag_contents != None:
+#         faiss_id = ai.name + "tx" + str(random.random())
+#         embed = crud.add_text([ai_update.rag_contents], [{"source" : ai_update.id}], [faiss_id])
 
-#         digest = suiapi.add_blob(ai=db_ai, ai_id=ai_update.ai_id, embed=embed)
-
-#         ais.create_rag(db=db, ai_id=ai_update.ai_id, comments=ai_update.comments, digest=digest, faiss_id=faiss_id)
+#         digest = suiapi.add_blob(ai=ai, ai_id=ai_update.id, embed=embed)
+#         if ai_update.rag_comments == None:
+#           rags.create_rag(db=db, ai_id=ai_update.id, comments="", tx_hash=digest, faiss_id=faiss_id)
+#         else:
+#           rags.create_rag(db=db, ai_id=ai_update.id, comments=ai_update.rag_comments, tx_hash=digest, faiss_id=faiss_id)
     
-#     return ais.update_ai(db=db, ai_id=ai_update.ai_id, ai_update=ai_update)
+#     return ais.update_ai(db=db, ai_update=ai_update)
 
 # @router.delete("/ais", response_model=schemas.AI)
 # def delete_ai(ai : schemas.AITableDelete, db: Session = Depends(utils.get_db)):
