@@ -137,7 +137,7 @@ class ChatTableOverViewList(BaseModel):
         from_attributes = True    
 
 # ChatContentsTable 스키마
-class ChatContentsTableBase(BaseModel):
+class ChatMessage(BaseModel):
     chat_contents_id: str
     chat_id: Optional[str] = None
     created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
@@ -161,7 +161,7 @@ class ChatContentsTableCreate(BaseModel):
     completion_tokens : Optional[int] = 0
 
 class ChatContentsTableListOut(BaseModel):
-    chats: List[ChatContentsTableBase]
+    chats: List[ChatMessage]
 
     class Config:
         from_attributes = True

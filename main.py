@@ -248,7 +248,7 @@ def create_chat(chat: schemas.ChatTableCreate, db: Session = Depends(get_db)):
 
 
 # # 채팅 내용 생성
-@app.post("/chats/create_contents/{chat_id}", response_model=schemas.ChatContentsTableBase)
+@app.post("/chats/create_contents/{chat_id}", response_model=schemas.ChatMessage)
 def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat_id :str, db: Session = Depends(get_db)):
     chat_exist = chats.get_chat(db, chat_id=chat_id)
     if not chat_exist:
