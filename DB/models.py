@@ -39,19 +39,19 @@ class ChatTable(Base):
     id = Column(String, nullable=False, primary_key=True)
     ai_id = Column(String, nullable=False)
     user_address = Column(String, nullable=False)
-    daily_user_access = Column(Boolean, nullable=True)
+    # daily_user_access = Column(Boolean, nullable=True)
 
 
-class ChatContentsTable(Base):
-    __tablename__ = "chatcontentstable"
+class ChatMessageTable(Base):
+    __tablename__ = "chatmessagetable"
 
     id = Column(String, nullable=False, primary_key=True)
-    chat_id = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.now(), nullable=True)  # Use DateTime instead of String
-    sender_id = Column(String, nullable=True)
-    message = Column(Text, nullable=True)
-    prompt_tokens = Column(Float, nullable=True)
-    completion_tokens = Column(Float, nullable=True)
+    chat_id = Column(String, nullable=False)
+    sender_id = Column(String, nullable=False)
+    message = Column(Text, nullable=False)
+    prompt_tokens = Column(Float, nullable=False)
+    completion_tokens = Column(Float, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(), nullable=False)  # Use DateTime instead of String
 
 class LikeTable(Base):
     __tablename__ = "liketable"

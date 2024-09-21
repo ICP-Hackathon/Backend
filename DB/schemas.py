@@ -47,3 +47,27 @@ class RAG(BaseModel):
 
     class Config:
         from_attributes = True
+
+################# Chat TABLE #################
+
+class Chat(BaseModel):
+    id: str
+    ai_id: str
+    user_address: str
+
+    class Config:
+        from_attributes = True
+
+################# ChatMessage TABLE #################
+
+class ChatMessage(BaseModel):
+    id: str
+    chat_id: str
+    sender_id: str
+    message: str
+    prompt_tokens : int = 0
+    completion_tokens : int = 0
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
