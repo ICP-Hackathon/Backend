@@ -60,3 +60,4 @@ class LikeTable(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_address = Column(String, nullable=True)
     ai_id = Column(String, nullable=True)
+    like = Column(Boolean, nullable=False)
