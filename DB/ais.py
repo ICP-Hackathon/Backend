@@ -238,7 +238,7 @@ def search_ai_by_name(db: Session, name: str, user_address : str):
 #     return db.query(models.AITable).order_by(models.AITable.usage.desc()).limit(10).all()
 
 def create_ai(db: Session,ai_id:str, ai: schemas.AITableCreate):
-    aiDB = schemas.AITableBase(
+    aiDB = schemas.AI(
         ai_id = ai_id,
         creator_address =  ai.creator_address,
         created_at = datetime.now(),

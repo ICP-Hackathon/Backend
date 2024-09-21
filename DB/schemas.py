@@ -21,7 +21,7 @@ class UserList(BaseModel):
 
 ################# AI TABLE #################
 
-class AITableBase(BaseModel):
+class AI(BaseModel):
     ai_id: str
     creator_address: Optional[str] = None
     created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
@@ -62,7 +62,7 @@ class AITableDelete(BaseModel):
     ai_id: str
     creator_address: str
 
-class AITableUserUpdateInput(AITableBase):
+class AITableUserUpdateInput(AI):
     contents: Optional[str] = None
     comments: Optional[str] = None
 
@@ -73,7 +73,7 @@ class AITableUpdate(BaseModel):
     introductions: Optional[str] = None
 
 
-class MyAIsOut(AITableBase):
+class MyAIsOut(AI):
     usage : Optional[int] = 0
 
 class MyAIsOutList(BaseModel):
@@ -108,7 +108,7 @@ class RAGTableListOut(BaseModel):
     class Config:
         from_attributes = True
 
-class AIDetail(AITableBase):
+class AIDetail(AI):
     creator : Optional[str] = None
     chatcount : Optional[int] = None
     usage : Optional[int] = None

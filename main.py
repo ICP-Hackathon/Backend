@@ -122,7 +122,7 @@ def search_ai_by_name(ai_name: str, user_address:str, db: Session = Depends(get_
     return res
 
 
-@app.post("/ais", response_model=schemas.AITableBase)
+@app.post("/ais", response_model=schemas.AI)
 def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     ai_id = ai.creator_address + '_' + ai.ai_name
     #먼저 만들어졌었는지 확인
@@ -145,7 +145,7 @@ def create_ai(ai: schemas.AITableCreate, db: Session = Depends(get_db)):
     
     return ais.create_ai(db=db, ai_id=ai_id, ai=ai)
 
-@app.put("/ais", response_model= schemas.AITableBase)
+@app.put("/ais", response_model= schemas.AI)
 def update_ais(ai_update: schemas.AITableUserUpdateInput,db: Session = Depends(get_db)):
     db_ai = ais.get_ai(db, ai_id=ai_update.ai_id)
     if not db_ai:
@@ -164,7 +164,7 @@ def update_ais(ai_update: schemas.AITableUserUpdateInput,db: Session = Depends(g
     
     return ais.update_ai(db=db, ai_id=ai_update.ai_id, ai_update=ai_update)
 
-@app.delete("/ais", response_model=schemas.AITableBase)
+@app.delete("/ais", response_model=schemas.AI)
 def delete_ai(ai : schemas.AITableDelete, db: Session = Depends(get_db)):
 
     db_ai = ais.get_ai(db, ai_id=ai.ai_id)
