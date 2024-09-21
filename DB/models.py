@@ -6,11 +6,11 @@ class UserTable(Base):
     __tablename__ = "usertable"
 
     user_address = Column(String, nullable=False, primary_key=True)
-    image_url = Column(String, nullable=False)
     nickname = Column(String, nullable=False)
     gender = Column(String, nullable=False)
     country = Column(String, nullable=False)
     interest = Column(String, nullable=False)
+    profile_image_url = Column(String, nullable=False)
 
 class AITable(Base):
     __tablename__ = "aitable"
