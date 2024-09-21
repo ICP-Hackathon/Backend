@@ -34,17 +34,6 @@ def get_ais_by_user(user_address: str, db: Session = Depends(utils.get_db)):
     res = ais.get_ais_by_user(db=db, user_address=user_address)
     return res
 
-# #인기있는 AI 보기
-# @router.get("/trend/{user_address}/{category}", response_model=ai_schemas.AIRead)
-# def get_trend_ais(
-#     user_address: str,
-#     category: str,
-#     offset: int = Query(0, description="Offset for pagination"),  # 기본값 0
-#     limit: int = Query(10, description="Limit for pagination"),  # 기본값 10
-#     db: Session = Depends(utils.get_db)
-# ):
-#     return ais.get_category_trend_users(db=db, offset=offset, limit=limit, category=category, user_address=user_address)
-
 @router.get("/today/{user_address}", response_model=ai_schemas.AIReadList)
 def get_today_ais(user_address : str, db: Session = Depends(utils.get_db)):
     res = ais.get_today_ais(db=db, user_address=user_address)
@@ -54,6 +43,18 @@ def get_today_ais(user_address : str, db: Session = Depends(utils.get_db)):
 def search_ai_by_name(ai_name: str, user_address:str, db: Session = Depends(utils.get_db)):
     res = ais.search_ai_by_name(db, name=ai_name, user_address=user_address)
     return res
+
+#인기있는 AI 보기
+#임시 api
+@router.get("/trend/{user_address}/{category}", response_model=ai_schemas.AIReadList)
+def get_trend_ais(
+    user_address: str,
+    category: str,
+    offset: int = Query(0, description="Offset for pagination"),  # 기본값 0
+    limit: int = Query(10, description="Limit for pagination"),  # 기본값 10
+    db: Session = Depends(utils.get_db)
+):
+    return ais.get_category_trend_users(db=db, offset=offset, limit=limit, category=category, user_address=user_address)
 
 
 @router.post("/", response_model=base_schemas.AI)
