@@ -10,7 +10,7 @@ from AI.crud import add_text, delete_text
 from AI.main import rag_qa
 from fastapi.middleware.cors import CORSMiddleware
 
-from SUI import suiapi
+from Blockchain import suiapi
 
 import random
 from time import ctime
