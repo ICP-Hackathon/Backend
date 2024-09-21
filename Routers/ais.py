@@ -21,13 +21,16 @@ router = APIRouter()
 #     return res
 
 
-# @router.get("/ais/ai_id/{ai_id}", response_model=schemas.AIDetail)
-# def get_ai(ai_id: str, db: Session = Depends(utils.get_db)):
-#     check_ai = ais.check_ai_exists(db, ai_id=ai_id)
-#     if not check_ai:
-#         raise HTTPException(status_code=404, detail="AI not found")
-#     res = ais.get_ai_detail(db=db, ai_id=ai_id)
-#     return res
+@router.get("/", response_model=ai_schemas.AIRead)
+def get_ai(
+      ai_id: str = Query("", description="AI ID"), 
+      db: Session = Depends(utils.get_db)
+    ):
+    ai_exists = ais.check_ai_exists(db, ai_id=ai_id)
+    if not ai_exists:
+        raise HTTPException(status_code=404, detail="AI not found")
+    res = ais.get_ai_overview(db=db, ai_id=ai_id)
+    return res
 
 # @router.get("/ais/user/{user_address}", response_model=schemas.MyAIsOutList)
 # def get_user_ais(user_address: str, db: Session = Depends(utils.get_db)):

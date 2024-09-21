@@ -1,6 +1,7 @@
 from typing import List
 
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from DB import models
 from Schema import base_schemas, ai_schemas
 from datetime import datetime
@@ -24,3 +25,36 @@ def create_ai(db: Session,ai_id:str, ai: ai_schemas.AICreate):
     db.commit()
     db.refresh(db_ai)
     return db_ai
+
+def get_ai_overview(db: Session, ai_id: str) -> ai_schemas.AIRead:
+
+    ai_table = db.query(models.AITable).filter(models.AITable.id == ai_id).first()
+    rags = db.query(models.RAGTable).filter(models.RAGTable.ai_id == ai_id).all()
+    chats = db.query(models.ChatTable).filter(models.ChatTable.ai_id == ai_id).all()
+
+    total_prompt_token_usage = db.query(func.sum(models.ChatMessageTable.prompt_tokens))\
+        .join(models.ChatTable, models.ChatMessageTable.chat_id == models.ChatTable.id)\
+        .filter(models.ChatTable.ai_id == ai_id)\
+        .scalar()
+    total_completion_token_usage = db.query(func.sum(models.ChatMessageTable.completion_tokens))\
+        .join(models.ChatTable, models.ChatMessageTable.chat_id == models.ChatTable.id)\
+        .filter(models.ChatTable.ai_id == ai_id)\
+        .scalar()
+
+    total_prompt_token_usage = total_prompt_token_usage or 0
+    total_completion_token_usage = total_completion_token_usage or 0
+
+    total_token_usage = total_prompt_token_usage + total_completion_token_usage
+
+    ai = base_schemas.AI.model_validate(ai_table)
+
+    ai_read = ai_schemas.AIRead(
+        **ai.model_dump(),
+        rags=rags,
+        chats=chats,
+        total_prompt_token_usage=total_prompt_token_usage,
+        total_completion_token_usage=total_completion_token_usage,
+        total_token_usage=total_token_usage
+    )
+    
+    return ai_read
