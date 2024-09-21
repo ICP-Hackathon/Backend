@@ -17,7 +17,7 @@ def get_ais(
     limit: int = Query(10, description="Limit for pagination"),  # 기본값 10
     db: Session = Depends(utils.get_db)
 ):
-    res = ais.get_ai_overviews(db=db, offset=offset, limit=limit)
+    res = ais.get_ais(db=db, offset=offset, limit=limit)
     return res
 
 
@@ -26,13 +26,13 @@ def get_ai( ai_id: str, db: Session = Depends(utils.get_db)):
     ai_exists = ais.check_ai_exists(db, ai_id=ai_id)
     if not ai_exists:
         raise HTTPException(status_code=404, detail="AI not found")
-    res = ais.get_ai_overview(db=db, ai_id=ai_id)
+    res = ais.get_ai_by_id(db=db, ai_id=ai_id)
     return res
 
-# @router.get("/ais/user/{user_address}", response_model=schemas.MyAIsOutList)
-# def get_user_ais(user_address: str, db: Session = Depends(utils.get_db)):
-#     res = ais.get_user_ais(db=db, user_address=user_address)
-#     return res
+@router.get("/user/{user_address}", response_model=ai_schemas.AIReadList)
+def get_ais_by_user(user_address: str, db: Session = Depends(utils.get_db)):
+    res = ais.get_ais_by_user(db=db, user_address=user_address)
+    return res
 
 # #인기있는 AI 보기
 # @router.get("/ais/trend/{user_address}/{category}", response_model=schemas.AIOVerviewList)

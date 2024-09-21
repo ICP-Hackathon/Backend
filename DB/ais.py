@@ -26,7 +26,7 @@ def create_ai(db: Session,ai_id:str, ai: ai_schemas.AICreate):
     db.refresh(db_ai)
     return db_ai
 
-def get_ai_overview(db: Session, ai_id: str) -> ai_schemas.AIRead:
+def get_ai_by_id(db: Session, ai_id: str) -> ai_schemas.AIRead:
 
     ai_table = db.query(models.AITable).filter(models.AITable.id == ai_id).first()
     rags = db.query(models.RAGTable).filter(models.RAGTable.ai_id == ai_id).all()
@@ -59,14 +59,24 @@ def get_ai_overview(db: Session, ai_id: str) -> ai_schemas.AIRead:
     
     return ai_read
 
-def get_ai_overviews(db: Session, offset: int, limit: int) -> ai_schemas.AIReadList:
-    ai_overview_list: List[ai_schemas.AIRead] = []  # 결과를 담을 리스트
-
+def get_ais(db: Session, offset: int, limit: int) -> ai_schemas.AIReadList:
     # AITable에서 offset과 limit을 사용하여 AI 목록을 가져옴
     ais = db.query(models.AITable).offset(offset).limit(limit - offset).all()
-    for ai in ais:
-        ai_overview = get_ai_overview(db=db, ai_id=ai.id)
-        ai_overview_list.append(ai_overview)
 
-    # 최종 결과로 AIOVerviewList 반환
-    return ai_schemas.AIReadList(ais=ai_overview_list)
+    ai_list: List[ai_schemas.AIRead] = []  # 결과를 담을 리스트
+    for ai in ais:
+        ai_read = get_ai_by_id(db=db, ai_id=ai.id)
+        ai_list.append(ai_read)
+
+    return ai_schemas.AIReadList(ais=ai_list)
+
+def get_ais_by_user(db: Session, user_address: str):
+    # 유저가 만든 AI 리스트를 가져옵니다
+    ais = db.query(models.AITable).filter(models.AITable.creator_address == user_address).all()
+
+    my_ai_list = []
+    for ai in ais:
+        ai_read = get_ai_by_id(db=db, ai_id=ai.id)
+        my_ai_list.append(ai_read)
+
+    return ai_schemas.AIReadList(ais=my_ai_list)
