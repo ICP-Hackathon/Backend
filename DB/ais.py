@@ -111,3 +111,10 @@ def update_ai(db: Session, ai_update: ai_schemas.AIUpdate) -> ai_schemas.AIRead:
     })
     db.commit()
     return get_ai_by_id(db=db, ai_id=ai_update.id)
+
+def delete_ai(db: Session, ai_id: str) -> base_schemas.AI:
+    db_ai = db.query(models.AITable).filter(models.AITable.id == ai_id).first()
+    if db_ai:
+        db.delete(db_ai)
+        db.commit()
+    return db_ai

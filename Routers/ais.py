@@ -108,26 +108,26 @@ def update_ai(ai_update: ai_schemas.AIUpdate, db: Session = Depends(utils.get_db
     
     return ais.update_ai(db=db, ai_update=ai_update)
 
-# @router.delete("/ais", response_model=schemas.AI)
-# def delete_ai(ai : schemas.AITableDelete, db: Session = Depends(utils.get_db)):
+@router.delete("/", response_model=base_schemas.AI)
+def delete_ai(ai_delete : ai_schemas.AIDelete, db: Session = Depends(utils.get_db)):
+    ai_exists = ais.check_ai_exists(db=db, ai_id=ai_delete.id)
+    if not ai_exists:
+        raise HTTPException(status_code=400, detail="AI Not found")
 
-#     db_ai = ais.get_ai(db, ai_id=ai.ai_id)
-#     if not db_ai:
-#         raise HTTPException(status_code=404, detail="AI not found")
-#     if db_ai.creator_address != ai.creator_address:
-#         raise HTTPException(status_code=400, detail="You are not the owner of AI")
+    ai = ais.get_ai_by_id(db, ai_id=ai_delete.id)
+    if ai.creator_address != ai_delete.creator_address:
+        raise HTTPException(status_code=400, detail="You are not the owner of AI")
     
-#     deleted_ai = ais.delete_ai(db=db, ai_id=ai.ai_id)
+    deleted_ai = ais.delete_ai(db=db, ai_id=ai.id)
 
-#     ai_logs = ais.get_raglogs_by_aiid(db=db, ai_id=ai.ai_id)
-#     ids = [i.faiss_id for i in ai_logs]
-#     delete_text(ids)
+    ai_rags = rags.get_rags_by_aiid(db=db, ai_id=ai.id)
+    ids = [i.faiss_id for i in ai_rags]
+    crud.delete_text(ids)
+    rags.delete_raglogs(db=db, ai_id=ai.id)
 
-#     ais.delete_raglogs(db=db, ai_id=ai.ai_id)
-
-#     if not deleted_ai:
-#         raise HTTPException(status_code=404, detail="AI not found")
-#     return deleted_ai
+    if not deleted_ai:
+        raise HTTPException(status_code=404, detail="AI not found")
+    return deleted_ai
 
 # # #특정 AI 로그 목록 보기
 # # @router.get("/ailogs/ai/{aiid}", response_model=schemas.AILogTableListOut)

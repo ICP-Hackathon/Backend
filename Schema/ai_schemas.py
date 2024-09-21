@@ -34,3 +34,7 @@ class AIUpdate(BaseModel):
     introductions: Optional[str] = None
     rag_contents: Optional[str] = None
     rag_comments: Optional[str] = None
+
+class AIDelete(BaseModel):
+    id: str
+    creator_address: str
