@@ -16,12 +16,12 @@ class AITable(Base):
     __tablename__ = "aitable"
 
     id = Column(String, nullable=False, primary_key=True)
-    creator_address = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.now(), nullable=True)  # Use DateTime instead of String
-    ai_name = Column(String, nullable=True)
-    image_url = Column(String, nullable=True)
-    category = Column(String, nullable=True)
-    introductions = Column(String, nullable=True)
+    creator_address = Column(String, nullable=False)
+    name = Column(String, nullable=False)
+    profile_image_url = Column(String, nullable=False)
+    category = Column(String, nullable=False)
+    introductions = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(), nullable=False)  # Use DateTime instead of String
 
 class RAGTable(Base):
     __tablename__ = "ragtable"

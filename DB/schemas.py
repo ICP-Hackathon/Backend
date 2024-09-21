@@ -1,5 +1,8 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import datetime
+
+################# USER TABLE #################
 
 class User(BaseModel):
     user_address: str
@@ -14,5 +17,19 @@ class User(BaseModel):
 
 class UserList(BaseModel):
     users : List[User]
+    class Config:
+        from_attributes = True
+
+################# AI TABLE #################
+
+class AI(BaseModel):
+    id: str
+    creator_address: str
+    name: str
+    profile_image_url: str
+    category: str
+    introductions: str
+    created_at: datetime
+
     class Config:
         from_attributes = True
