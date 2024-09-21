@@ -73,12 +73,12 @@ def create_ai(ai: ai_schemas.AICreate, db: Session = Depends(utils.get_db)):
     embed = crud.add_text([ai.rag_contents], [{"source" : ai_id}], [faiss_id])
     print("embed", embed[0][0])
 
-    # # 블록체인에 ai 생성 
-    # suiapi.add_ai(ai_id=ai_id, creator_address=ai.creator_address)
+    # 블록체인에 ai 생성 
+    # creator_address가 블록체인 address 형식이 아닐 때 HTTPExeption(status_code=400, detail="User address is not a blockchain address type")
+    suiapi.add_ai(ai_id=ai_id, creator_address=ai.creator_address)
 
-    # # blob 저장
-    # digest = suiapi.add_blob(ai=ai, ai_id=ai_id, embed=embed)
-    digest=str("tx1")
+    # blob 저장
+    digest = suiapi.add_blob(ai=ai, ai_id=ai_id, embed=embed)
 
     # RAG 테이블에 기록
     rags.create_rag(db=db, ai_id=ai_id, comments=ai.rag_comments, tx_hash=digest, faiss_id=faiss_id)
