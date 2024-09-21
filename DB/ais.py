@@ -105,7 +105,7 @@ def get_ai_detail(db: Session, ai_id: str) -> schemas.AIDetail:
     usage = usage or 0
 
     # RAGTable 데이터는 모든 레코드에서 logs로 변환합니다
-    logs = [schemas.RAGTableBase(**rag.__dict__) for rag in rag_info]
+    logs = [schemas.RAG(**rag.__dict__) for rag in rag_info]
 
     # AIDetail 스키마로 반환
     ai_detail = schemas.AIDetail(
@@ -119,7 +119,7 @@ def get_ai_detail(db: Session, ai_id: str) -> schemas.AIDetail:
         introductions=ai_info.introductions,
         chatcount= chat_count,
         usage = usage,
-        logs=logs  # logs는 RAGTableBase 리스트로 설정
+        logs=logs  # logs는 RAG 리스트로 설정
     )
     
     return ai_detail

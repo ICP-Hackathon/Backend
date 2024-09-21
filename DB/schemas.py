@@ -78,7 +78,7 @@ class MyAIsOutList(BaseModel):
 
 # AILogTable 스키마
 
-class RAGTableBase(BaseModel):
+class RAG(BaseModel):
     rag_id: int
     ai_id: Optional[str] = None
     created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
@@ -97,17 +97,11 @@ class RAGTableCreate(BaseModel):
     tx_url: Optional[str] = None
     faiss_id: Optional[str] = None
 
-class RAGTableListOut(BaseModel):
-    logs: List[RAGTableBase]
-
-    class Config:
-        from_attributes = True
-
 class AIDetail(AI):
     creator : Optional[str] = None
     chatcount : Optional[int] = None
     usage : Optional[int] = None
-    logs: List[RAGTableBase]
+    logs: List[RAG]
     class Config:
         from_attributes = True
 
