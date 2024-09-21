@@ -16,14 +16,14 @@ def check_user_exists(db: Session, user_address: str):
     else:
         return False
 
-def add_user(db: Session, user: schemas.UserTableBase):
+def add_user(db: Session, user: schemas.User):
     db_user = models.UserTable(**user.model_dump())
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
 
-def update_user(db: Session, user_update: schemas.UserTableBase):
+def update_user(db: Session, user_update: schemas.User):
     db_user = get_user(db, user_update.user_address)
     if db_user:
         for key, value in user_update.model_dump(exclude_unset=True).items():

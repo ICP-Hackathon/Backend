@@ -43,16 +43,16 @@ def read_root():
 
 ########################### 유저 관련 API ###########################
 
-@app.get("/users", response_model=schemas.UserTableList)
+@app.get("/users", response_model=schemas.UserList)
 def get_users(
     offset: int = Query(0, description="Offset for pagination"), 
     limit: int = Query(10, description="Limit for pagination"), 
     db: Session = Depends(get_db)
 ):
     res = users.get_users(db=db, offset=offset, limit=limit)
-    return schemas.UserTableList(users=res)
+    return schemas.UserList(users=res)
 
-@app.get("/users/{user_address}", response_model=schemas.UserTableBase)
+@app.get("/users/{user_address}", response_model=schemas.User)
 def get_user(user_address : str, db: Session = Depends(get_db)):
     check_user = users.check_user_exists(db=db, user_address=user_address)
     if not check_user:
@@ -63,16 +63,16 @@ def get_user(user_address : str, db: Session = Depends(get_db)):
 def check_user_exists(user_address : str, db: Session = Depends(get_db)):
     return users.check_user_exists(db = db, user_address=user_address)
 
-@app.post("/users", response_model=schemas.UserTableBase)
-def add_user(user: schemas.UserTableBase, db: Session = Depends(get_db)):
+@app.post("/users", response_model=schemas.User)
+def add_user(user: schemas.User, db: Session = Depends(get_db)):
     check_user = users.check_user_exists(db=db, user_address=user.user_address)
     if check_user:
         raise HTTPException(status_code=400, detail="User Already Exists")
     suiapi.add_user_creator_consumser(user.user_address)
     return users.add_user(db, user = user)
 
-@app.put("/users", response_model=schemas.UserTableBase)
-def update_user(user: schemas.UserTableBase, db: Session = Depends(get_db)):
+@app.put("/users", response_model=schemas.User)
+def update_user(user: schemas.User, db: Session = Depends(get_db)):
     return users.update_user(db, user_update = user)
 
 ########################### AI 관련 API ###########################

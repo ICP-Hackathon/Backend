@@ -4,7 +4,7 @@ from datetime import time, datetime
 
 ################# USER TABLE #################
 
-class UserTableBase(BaseModel):
+class User(BaseModel):
     user_address: str
     nickname: Optional[str] = '0.0'
     image_url: Optional[str] = None
@@ -14,8 +14,8 @@ class UserTableBase(BaseModel):
     class Config:
         from_attributes = True
 
-class UserTableList(BaseModel):
-    users : List[UserTableBase]
+class UserList(BaseModel):
+    users : List[User]
     class Config:
         from_attributes = True
 
