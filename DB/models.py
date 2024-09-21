@@ -15,7 +15,7 @@ class UserTable(Base):
 class AITable(Base):
     __tablename__ = "aitable"
 
-    ai_id = Column(String, nullable=False, primary_key=True)
+    id = Column(String, nullable=False, primary_key=True)
     creator_address = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.now(), nullable=True)  # Use DateTime instead of String
     ai_name = Column(String, nullable=True)
@@ -26,17 +26,18 @@ class AITable(Base):
 class RAGTable(Base):
     __tablename__ = "ragtable"
 
-    rag_id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     ai_id = Column(String, primary_key=True, nullable=False)
     created_at = Column(DateTime, default=datetime.now(), nullable=True)  # Use DateTime instead of String
     comments = Column(Text, nullable=True)
     tx_url = Column(String, nullable=True)
+    is_stored_at_blockchain = Column(Boolean, nullable=False)
     faiss_id = Column(String, nullable=True)
 
 class ChatTable(Base):
     __tablename__ = "chattable"
 
-    chat_id = Column(String, nullable=False, primary_key=True)
+    id = Column(String, nullable=False, primary_key=True)
     ai_id = Column(String, nullable=False)
     user_address = Column(String, nullable=False)
     daily_user_access = Column(Boolean, nullable=True)
@@ -45,7 +46,7 @@ class ChatTable(Base):
 class ChatContentsTable(Base):
     __tablename__ = "chatcontentstable"
 
-    chat_contents_id = Column(String, nullable=False, primary_key=True)
+    id = Column(String, nullable=False, primary_key=True)
     chat_id = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.now(), nullable=True)  # Use DateTime instead of String
     sender_id = Column(String, nullable=True)
@@ -56,6 +57,6 @@ class ChatContentsTable(Base):
 class LikeTable(Base):
     __tablename__ = "liketable"
 
-    like_id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     user_address = Column(String, nullable=True)
     ai_id = Column(String, nullable=True)
