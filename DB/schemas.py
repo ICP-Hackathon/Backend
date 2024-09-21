@@ -170,7 +170,7 @@ class ChatContentsTableListOut(BaseModel):
 ##Like Table
 
 # Base schema for LikeTable
-class LikeTableBase(BaseModel):
+class Like(BaseModel):
     like_id: int
     user_address: Optional[str] = None
     ai_id: Optional[str] = None
@@ -185,7 +185,7 @@ class LikeTableCreate(BaseModel):
     class Config:
         from_attributes = True
 
-class LikedAIOut(LikeTableBase):
+class LikedAIOut(Like):
     creator_address: Optional[str] = None
     ai_name: Optional[str] = None
     image_url: Optional[str] = None
