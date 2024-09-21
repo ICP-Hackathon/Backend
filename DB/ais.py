@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
 from datetime import datetime
-from .like import check_like
+from .like import get_ai_like
 from .users import get_user
 from .chats import check_chat_by_ai_id
 from sqlalchemy import func
@@ -9,29 +9,23 @@ from sqlalchemy import func
 
 ################### AITable CRUD functions ###################
 
-def get_ais(db: Session, offset: int, limit: int):
-    # AITable에서 offset과 limit을 사용하여 AI 목록을 가져옴
-    ai_infos = db.query(models.AITable).offset(offset).limit(limit - offset).all()
-
+def get_ai_overviews(db: Session, offset: int, limit: int):
     ai_overview_list = []  # 결과를 담을 리스트
 
-    # 각 ai_info에 대해 처리
-    for ai_info in ai_infos:
+    # AITable에서 offset과 limit을 사용하여 AI 목록을 가져옴
+    ais = db.query(models.AITable).offset(offset).limit(limit - offset).all()
+    for ai in ais:
         # 유저 정보를 가져옴
-        creator_info = get_user(db=db, user_address=ai_info.creator_address)
+        creator = get_user(db=db, user_address=ai.creator_address)
 
         # 유저가 해당 AI를 좋아하는지 여부를 확인
-        like_bool = check_like(db=db, user_address=creator_info.user_address, ai_id=ai_info.ai_id)
+        like_bool = get_ai_like(db=db, user_address=creator.user_address, ai_id=ai.id)
 
         # AIOverview 객체 생성
         ai_overview = schemas.AIOverview(
-            ai_id=ai_info.ai_id,
-            creator_address=ai_info.creator_address,
-            ai_name=ai_info.ai_name,
-            creator=creator_info.nickname,  # 유저 닉네임을 가져옴
-            like=like_bool,  # 유저가 AI를 좋아하는지 여부
-            image_url= ai_info.image_url,
-            category= ai_info.category
+            ai,
+            like=like_bool,
+            creator=creator,
         )
 
         # 리스트에 추가
@@ -142,7 +136,7 @@ def get_today_ais(db: Session, user_address:str):
         # 유저 정보를 가져옴
         creator_info = get_user(db=db, user_address=ai_info.creator_address)
         # 유저가 해당 AI를 좋아하는지 여부를 확인
-        like_bool = check_like(db=db, user_address=user_address, ai_id=ai_info.ai_id)
+        like_bool = get_ai_like(db=db, user_address=user_address, ai_id=ai_info.ai_id)
 
         # AIOverview 객체 생성
         ai_overview = schemas.AIOverview(
@@ -187,7 +181,7 @@ def get_category_trend_users(db: Session, offset: int, limit : int, category:str
     for ai_info, daily_user_access_count in res:
         # 해당 유저가 이 AI를 좋아하는지 여부 확인
         creator_info = get_user(db=db, user_address=ai_info.creator_address)
-        like_bool = check_like(db=db, user_address=user_address, ai_id=ai_info.ai_id)
+        like_bool = get_ai_like(db=db, user_address=user_address, ai_id=ai_info.ai_id)
         # AIOverview 객체 생성
         ai_overview = schemas.AIOverview(
             ai_id=ai_info.ai_id,
@@ -215,7 +209,7 @@ def search_ai_by_name(db: Session, name: str, user_address : str):
         # 유저 정보를 가져옴
         creator_info = get_user(db=db, user_address=ai_info.creator_address)
         # 유저가 해당 AI를 좋아하는지 여부를 확인
-        like_bool = check_like(db=db, user_address=user_address, ai_id=ai_info.ai_id)
+        like_bool = get_ai_like(db=db, user_address=user_address, ai_id=ai_info.ai_id)
 
         # AIOverview 객체 생성
         ai_overview = schemas.AIOverview(

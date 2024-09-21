@@ -83,7 +83,7 @@ def get_ais(
     limit: int = Query(10, description="Limit for pagination"),  # 기본값 10
     db: Session = Depends(get_db)
 ):
-    res = ais.get_ais(db=db, offset=offset, limit=limit)
+    res = ais.get_ai_overviews(db=db, offset=offset, limit=limit)
     return res
 
 

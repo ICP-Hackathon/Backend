@@ -22,11 +22,11 @@ def get_user_like_ais(db: Session, user_address: str):
         liked_ais.append(liked_ai)
     return liked_ais
 
-def check_like(db: Session, user_address: str, ai_id: str) -> bool:
+def get_ai_like(db: Session, user_address: str, ai_id: str) -> bool:
     return db.query(models.LikeTable).filter(
         models.LikeTable.user_address == user_address,
         models.LikeTable.ai_id == ai_id
-    ).first() is not None
+    ).first().like
 
 def is_ai_liked_by_user(db: Session, user_address: str, ai_id: str) -> bool:
 

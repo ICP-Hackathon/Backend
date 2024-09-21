@@ -22,7 +22,7 @@ class UserList(BaseModel):
 ################# AI TABLE #################
 
 class AI(BaseModel):
-    ai_id: str
+    id: str
     creator_address: Optional[str] = None
     created_at: Optional[datetime] = None  # Use datetime in Pydantic as well
     ai_name: Optional[str] = None
@@ -33,13 +33,8 @@ class AI(BaseModel):
     class Config:
         from_attributes = True
 
-class AIOverview(BaseModel):
-    ai_id: str
-    creator_address: Optional[str] = None
-    image_url: Optional[str] = None
-    ai_name: Optional[str] = None
-    creator: Optional[str] = None
-    category: Optional[str] = None
+class AIOverview(AI):
+    creator: User = None
     like : Optional[bool] = False
     class Config:
         from_attributes = True
