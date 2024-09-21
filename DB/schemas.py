@@ -17,6 +17,7 @@ class User(BaseModel):
 
 class UserList(BaseModel):
     users : List[User]
+
     class Config:
         from_attributes = True
 
@@ -29,6 +30,19 @@ class AI(BaseModel):
     profile_image_url: str
     category: str
     introductions: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+################# RAG TABLE #################
+
+class RAG(BaseModel):
+    id: int
+    ai_id: str
+    comments: str
+    faiss_id: str
+    tx_hash: Optional[str] = None
     created_at: datetime
 
     class Config:

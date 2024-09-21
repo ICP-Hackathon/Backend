@@ -28,11 +28,10 @@ class RAGTable(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     ai_id = Column(String, primary_key=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.now(), nullable=True)  # Use DateTime instead of String
-    comments = Column(Text, nullable=True)
-    tx_url = Column(String, nullable=True)
-    is_stored_at_blockchain = Column(Boolean, nullable=False)
-    faiss_id = Column(String, nullable=True)
+    comments = Column(Text, nullable=False)
+    faiss_id = Column(String, nullable=False)
+    tx_hash = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.now(), nullable=False)  # Use DateTime instead of String
 
 class ChatTable(Base):
     __tablename__ = "chattable"
