@@ -50,10 +50,10 @@ def get_today_ais(user_address : str, db: Session = Depends(utils.get_db)):
     res = ais.get_today_ais(db=db, user_address=user_address)
     return res
 
-# @router.get("/ais/search/{ai_name}/{user_address}", response_model=schemas.AIOVerviewList)
-# def search_ai_by_name(ai_name: str, user_address:str, db: Session = Depends(utils.get_db)):
-#     res = ais.search_ai_by_name(db, name=ai_name, user_address=user_address)
-#     return res
+@router.get("/search/{ai_name}/{user_address}", response_model=ai_schemas.AIReadList)
+def search_ai_by_name(ai_name: str, user_address:str, db: Session = Depends(utils.get_db)):
+    res = ais.search_ai_by_name(db, name=ai_name, user_address=user_address)
+    return res
 
 
 @router.post("/", response_model=base_schemas.AI)

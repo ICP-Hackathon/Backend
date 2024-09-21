@@ -70,7 +70,7 @@ def get_ais(db: Session, offset: int, limit: int) -> ai_schemas.AIReadList:
 
     return ai_schemas.AIReadList(ais=ai_list)
 
-def get_ais_by_user(db: Session, user_address: str):
+def get_ais_by_user(db: Session, user_address: str) -> ai_schemas.AIReadList:
     # 유저가 만든 AI 리스트를 가져옵니다
     ais = db.query(models.AITable).filter(models.AITable.creator_address == user_address).all()
 
@@ -81,7 +81,7 @@ def get_ais_by_user(db: Session, user_address: str):
 
     return ai_schemas.AIReadList(ais=my_ai_list)
 
-def get_today_ais(db: Session, user_address:str):
+def get_today_ais(db: Session, user_address:str) -> ai_schemas.AIReadList:
     ais = db.query(models.AITable).order_by(models.AITable.created_at.desc()).limit(4).all()
 
     ai_list = []  # 결과를 담을 리스트
@@ -89,4 +89,15 @@ def get_today_ais(db: Session, user_address:str):
         ai_read = get_ai_by_id(db=db, ai_id=ai.id)
         ai_list.append(ai_read)
 
+    return ai_schemas.AIReadList(ais=ai_list) 
+
+def search_ai_by_name(db: Session, name: str, user_address : str) -> ai_schemas.AIReadList:
+    ais = db.query(models.AITable).filter(models.AITable.name.like(f"%{name}%")).all()
+
+    ai_list = []  # 결과를 담을 리스트
+    for ai in ais:
+        ai_read = get_ai_by_id(db=db, ai_id=ai.id)
+        ai_list.append(ai_read)
+
+    # 최종 결과로 AIOVerviewList 반환
     return ai_schemas.AIReadList(ais=ai_list) 
