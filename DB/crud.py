@@ -141,7 +141,7 @@ def get_chats(db: Session, userid: str):
 def get_chatlist(db: Session, userid: str):
     return db.query(models.ChatTable).filter(models.ChatTable.userid == userid).all()
 
-def create_chat(db: Session, chat: schemas.ChatTableBase):
+def create_chat(db: Session, chat: schemas.ChatRoom):
     db_chat = models.ChatTable(**chat.model_dump())
     db.add(db_chat)
     db.commit()

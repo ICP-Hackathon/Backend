@@ -217,7 +217,7 @@ def read_chat_content(chat_id: str, db: Session = Depends(get_db)):
     return res
 
 # # 챗 생성
-@app.post("/chats", response_model=schemas.ChatTableBase)
+@app.post("/chats", response_model=schemas.ChatRoom)
 def create_chat(chat: schemas.ChatTableCreate, db: Session = Depends(get_db)):
     db_ai = ais.get_ai(db, ai_id=chat.ai_id)
     if not db_ai:
@@ -229,7 +229,7 @@ def create_chat(chat: schemas.ChatTableCreate, db: Session = Depends(get_db)):
     if chat_exist:
         raise HTTPException(status_code=400, detail="Chat already exists")
 
-    chatTable = schemas.ChatTableBase(
+    chatTable = schemas.ChatRoom(
         chat_id=chat_id,
         user_address=chat.user_address,
         ai_id= chat.ai_id,
@@ -294,7 +294,7 @@ def create_chat_content(chat_content: schemas.ChatContentsTableCreateInput, chat
     return chats.create_chat_content(db=db, chat_content=answerContentsTable)
 
 # # 채팅 삭제
-# @app.delete("/chats/{chat_id}", response_model=schemas.ChatTableBase)
+# @app.delete("/chats/{chat_id}", response_model=schemas.ChatRoom)
 # def delete_chat(chat_id: str, db: Session = Depends(get_db)):
 #     deleted_chat = chats.delete_chat(db=db, chat_id=chat_id)
 #     if not deleted_chat:

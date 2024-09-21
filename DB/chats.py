@@ -71,7 +71,7 @@ def get_chats_by_ai_id(db: Session, ai_id: str):
     return chats
 
 
-def create_chat(db: Session, chat: schemas.ChatTableBase):
+def create_chat(db: Session, chat: schemas.ChatRoom):
     db_chat = models.ChatTable(**chat.model_dump())
     db.add(db_chat)
     db.commit()

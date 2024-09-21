@@ -106,7 +106,7 @@ class AIDetail(AI):
         from_attributes = True
 
 # ChatTable 스키마
-class ChatTableBase(BaseModel):
+class ChatRoom(BaseModel):
     chat_id: str
     ai_id: Optional[str] = None
     user_address: Optional[str] = None
