@@ -3,7 +3,7 @@ from typing import List
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from Routers import users
+from Routers import users, ais
 
 # from DB import users, ais, chats, models, schemas, like
 from DB import models
@@ -24,6 +24,7 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 app.include_router(users.router, prefix="/users", tags=["users"])
+app.include_router(ais.router, prefix="/ais", tags=["ais"])
 
 app.add_middleware(
     CORSMiddleware,

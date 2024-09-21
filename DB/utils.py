@@ -7,3 +7,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def create_ai_id(creator_address: str, ai_name: str ) -> str:
+    return creator_address + '_' + ai_name

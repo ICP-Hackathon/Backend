@@ -30,7 +30,7 @@ class AI(BaseModel):
     profile_image_url: str
     category: str
     introductions: str
-    created_at: datetime
+    created_at: Optional[datetime] = None 
 
     class Config:
         from_attributes = True
@@ -42,8 +42,8 @@ class RAG(BaseModel):
     ai_id: str
     comments: str
     faiss_id: str
-    tx_hash: Optional[str] = None
-    created_at: datetime
+    tx_hash: str
+    created_at: Optional[datetime] = None 
 
     class Config:
         from_attributes = True
@@ -67,7 +67,7 @@ class ChatMessage(BaseModel):
     message: str
     prompt_tokens : int = 0
     completion_tokens : int = 0
-    created_at: datetime
+    created_at: Optional[datetime] = None 
 
     class Config:
         from_attributes = True
