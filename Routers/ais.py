@@ -35,7 +35,7 @@ def get_ais_by_user(user_address: str, db: Session = Depends(utils.get_db)):
     return res
 
 # #인기있는 AI 보기
-# @router.get("/ais/trend/{user_address}/{category}", response_model=schemas.AIOVerviewList)
+# @router.get("/trend/{user_address}/{category}", response_model=ai_schemas.AIRead)
 # def get_trend_ais(
 #     user_address: str,
 #     category: str,
@@ -45,10 +45,10 @@ def get_ais_by_user(user_address: str, db: Session = Depends(utils.get_db)):
 # ):
 #     return ais.get_category_trend_users(db=db, offset=offset, limit=limit, category=category, user_address=user_address)
 
-# @router.get("/ais/today/{user_address}", response_model=schemas.AIOVerviewList)
-# def get_today_ais(user_address : str, db: Session = Depends(utils.get_db)):
-#     res = ais.get_today_ais(db=db, user_address=user_address)
-#     return res
+@router.get("/today/{user_address}", response_model=ai_schemas.AIReadList)
+def get_today_ais(user_address : str, db: Session = Depends(utils.get_db)):
+    res = ais.get_today_ais(db=db, user_address=user_address)
+    return res
 
 # @router.get("/ais/search/{ai_name}/{user_address}", response_model=schemas.AIOVerviewList)
 # def search_ai_by_name(ai_name: str, user_address:str, db: Session = Depends(utils.get_db)):

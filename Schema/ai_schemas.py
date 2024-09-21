@@ -19,6 +19,8 @@ class AIRead(base_schemas.AI):
     total_prompt_token_usage: int
     total_completion_token_usage: int
     total_token_usage: int
+    # like 추가
+    # total_chat_counts_24h
 
 class AIReadList(BaseModel):
     ais : List[AIRead]

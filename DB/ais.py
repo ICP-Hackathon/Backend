@@ -80,3 +80,13 @@ def get_ais_by_user(db: Session, user_address: str):
         my_ai_list.append(ai_read)
 
     return ai_schemas.AIReadList(ais=my_ai_list)
+
+def get_today_ais(db: Session, user_address:str):
+    ais = db.query(models.AITable).order_by(models.AITable.created_at.desc()).limit(4).all()
+
+    ai_list = []  # 결과를 담을 리스트
+    for ai in ais:
+        ai_read = get_ai_by_id(db=db, ai_id=ai.id)
+        ai_list.append(ai_read)
+
+    return ai_schemas.AIReadList(ais=ai_list) 
