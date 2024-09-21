@@ -114,6 +114,16 @@ class ChatRoom(BaseModel):
     class Config:
         from_attributes = True
 
+# 나중에 AIOverview 가 되어야 함
+class AIDetailOverview(AI):
+    creator: User
+    chatrooms : List[ChatRoom]
+    rags: List[RAG]
+    like : bool = False
+    usage : int = 0
+    class Config:
+        from_attributes = True
+
 class ChatTableCreate(BaseModel):
     ai_id: Optional[str] = None
     user_address: Optional[str] = None
