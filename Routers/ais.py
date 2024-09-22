@@ -56,6 +56,13 @@ def get_trend_ais(
 ):
     return ais.get_category_trend_users(db=db, offset=offset, limit=limit, category=category, user_address=user_address)
 
+# Get all AIs liked by a user
+@router.get("/likes/{user_address}", response_model=ai_schemas.AIReadList)
+def get_ais_user_like(user_address: str, db: Session = Depends(utils.get_db)):
+    ai_read_list = ais.get_ais_user_like(db, user_address=user_address)
+    if not ai_read_list.ais:
+        raise HTTPException(status_code=404, detail="No liked AIs found for this user")
+    return ai_read_list
 
 @router.post("/", response_model=base_schemas.AI)
 def create_ai(ai: ai_schemas.AICreate, db: Session = Depends(utils.get_db)):

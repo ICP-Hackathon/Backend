@@ -71,3 +71,12 @@ class ChatMessage(BaseModel):
 
     class Config:
         from_attributes = True
+
+################# Like TABLE #################
+class Like(BaseModel):
+    like_id: int
+    user_address: str
+    ai_id: str
+
+    class Config:
+        from_attributes = True

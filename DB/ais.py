@@ -120,6 +120,17 @@ def get_category_trend_users(db: Session, offset: int, limit : int, category:str
     # 최종 결과로 AIOVerviewList 반환
     return ai_schemas.AIReadList(ais=ai_list) 
 
+def get_ais_user_like(db: Session, user_address: str) -> ai_schemas.AIReadList:
+    results = db.query(models.LikeTable, models.AITable) \
+        .join(models.AITable, models.AITable.id == models.LikeTable.ai_id) \
+        .filter(models.LikeTable.user_address == user_address).all()
+    
+    ais = []
+    for like, ai in results:
+        ai_read = get_ai_by_id(db=db, ai_id=ai.id)
+        ais.append(ai_read)
+    return ai_schemas.AIReadList(ais=ais)
+
 def update_ai(db: Session, ai_update: ai_schemas.AIUpdate) -> ai_schemas.AIRead:
     db.query(models.AITable).filter(models.AITable.id == ai_update.id).update({
     models.AITable.name: ai_update.name,
