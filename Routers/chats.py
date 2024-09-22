@@ -22,11 +22,15 @@ def get_chats(user_address: str, db: Session = Depends(utils.get_db)):
 # #         raise HTTPException(status_code=404, detail="Chat not found")
 # #     return schemas.ChatTableOverViewList(chats=db_chat)
 
-# # # 특정 채팅 읽기
-# @router.get("/chats/contents/{chat_id}", response_model=schemas.ChatContentsTableListOut)
-# def read_chat_content(chat_id: str, db: Session = Depends(utils.get_db)):
-#     res = chats.get_chat_contents(db, chat_id=chat_id)
-#     return res
+# # 특정 채팅 읽기
+@router.get("/messages/{chat_id}", response_model=chat_schemas.ChatMessagesRead)
+def get_chat_messages(chat_id: str, db: Session = Depends(utils.get_db)):
+    chat_exists = chats.check_chat_exists(db=db, chat_id=chat_id)
+    if not chat_exists:
+        raise HTTPException(status_code=404, detail="Chat not found")
+
+    res = chats.get_chat_messages(db, chat_id=chat_id)
+    return res
 
 # # 챗 생성
 @router.post("/", response_model=base_schemas.Chat)

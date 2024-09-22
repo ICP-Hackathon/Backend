@@ -14,5 +14,4 @@ class ChatReadList(BaseModel):
     chats : List[ChatRead]
 
 class ChatMessagesRead(base_schemas.Chat):
-    ai : base_schemas.AI
     messages : List[base_schemas.ChatMessage]
