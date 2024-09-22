@@ -6,8 +6,14 @@ from DB import models
 from Schema import base_schemas, chat_schemas
 from datetime import datetime
 
+
 def check_chat_exists(db: Session, chat_id: str) -> bool:
     return db.query(models.ChatTable).filter(models.ChatTable.id == chat_id).first() is not None
+
+def get_chat_by_id(db: Session, chat_id: str) -> base_schemas.Chat:
+    chat_model = db.query(models.ChatTable).filter(models.ChatTable.id == chat_id).first()
+    chat = base_schemas.Chat.model_validate(chat_model)
+    return chat
 
 def get_chats_by_user_address(db: Session, user_address: str):
     results = (
@@ -41,7 +47,7 @@ def create_chat_message(db: Session, chat_message: base_schemas.ChatMessage):
     db.add(db_chat_content)
     db.commit()
     db.refresh(db_chat_content)
-    return db_chat_content
+    return chat_message
 
 def get_chat_messages(db: Session, chat_id: str) -> chat_schemas.ChatMessagesRead:
     chat_db = db.query(models.ChatTable).filter(models.ChatTable.id == chat_id).first()

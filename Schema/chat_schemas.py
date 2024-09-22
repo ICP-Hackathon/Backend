@@ -13,5 +13,9 @@ class ChatRead(base_schemas.Chat):
 class ChatReadList(BaseModel):
     chats : List[ChatRead]
 
+class ChatMessageCreate(BaseModel):
+    sender_id: str
+    message: str
+
 class ChatMessagesRead(base_schemas.Chat):
     messages : List[base_schemas.ChatMessage]
