@@ -49,6 +49,7 @@ def create_chat(chat: chat_schemas.ChatCreate, db: Session = Depends(utils.get_d
         id=chat_id,
         user_address=chat.user_address,
         ai_id= chat.ai_id,
+        daily_user_access=True
     )
     chat_message_id = utils.create_chat_message_id(chat_id=chat_id)
     chat_message = base_schemas.ChatMessage(
@@ -64,14 +65,14 @@ def create_chat(chat: chat_schemas.ChatCreate, db: Session = Depends(utils.get_d
 
 
 # # 채팅 내용 생성
-@router.post("/message/{chat_id}", response_model=base_schemas.ChatMessage)
+@router.post("/message/{chat_id}/", response_model=base_schemas.ChatMessage)
 def create_chat_message(chat_message_input: chat_schemas.ChatMessageCreate, chat_id :str, db: Session = Depends(utils.get_db)):
     chat_exist = chats.check_chat_exists(db=db, chat_id=chat_id)
     if not chat_exist:
         raise HTTPException(status_code=400, detail="Chat Doesn't exists")
 
-    chat = chats.get_chat_by_id(chat_id=chat_id)
-    question_message_id = utils.create_chat_message_id(chat_id=chat_id)
+    chat = chats.get_chat_by_id(db, chat_id=chat_id)
+    question_message_id = utils.create_user_chat_message_id(chat_id=chat_id)
 
     #RAG 답변 생성해서 넣기
     token, answer = rag_qa(chat_message_input.message, chat.ai_id)
@@ -85,7 +86,7 @@ def create_chat_message(chat_message_input: chat_schemas.ChatMessageCreate, chat
     )
     chats.create_chat_message(db=db, chat_message=question_message)
 
-    answer_message_id = utils.create_chat_message_id(chat_id=chat_id)
+    answer_message_id = utils.create_ai_chat_message_id(chat_id=chat_id)
     answer_message = base_schemas.ChatMessage(
         id =  answer_message_id,
         chat_id =  chat_id,

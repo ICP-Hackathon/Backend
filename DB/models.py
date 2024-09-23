@@ -39,7 +39,7 @@ class ChatTable(Base):
     id = Column(String, nullable=False, primary_key=True)
     ai_id = Column(String, nullable=False)
     user_address = Column(String, nullable=False)
-    # daily_user_access = Column(Boolean, nullable=True)
+    daily_user_access = Column(Boolean, nullable=True)
 
 
 class ChatMessageTable(Base):

@@ -16,5 +16,8 @@ def create_ai_id(creator_address: str, ai_name: str ) -> str:
 def create_chat_id(user_address: str, ai_id: str ) -> str:
     return user_address + '_' + ai_id
 
-def create_chat_message_id(chat_id) -> str:
+def create_user_chat_message_id(chat_id) -> str:
+    return chat_id + '_' + ctime()
+
+def create_ai_chat_message_id(chat_id) -> str:
     return 'AI_' + chat_id + '_' + ctime()

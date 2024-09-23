@@ -5,6 +5,7 @@ from sqlalchemy import func
 from DB import models
 from Schema import base_schemas, ai_schemas
 from datetime import datetime
+from DB.likes import is_ai_liked_by_user
 
 def check_ai_exists(db: Session, ai_id: str) -> bool:
     return db.query(models.AITable).filter(models.AITable.id == ai_id).first() is not None
@@ -26,11 +27,14 @@ def create_ai(db: Session,ai_id:str, ai: ai_schemas.AICreate):
     db.refresh(db_ai)
     return db_ai
 
-def get_ai_by_id(db: Session, ai_id: str) -> ai_schemas.AIRead:
+def get_ai_by_id(db: Session, ai_id: str, user_address : str = "") -> ai_schemas.AIRead:
 
     ai_table = db.query(models.AITable).filter(models.AITable.id == ai_id).first()
     rags = db.query(models.RAGTable).filter(models.RAGTable.ai_id == ai_id).all()
-    chats = db.query(models.ChatTable).filter(models.ChatTable.ai_id == ai_id).all()
+    chat_count = db.query(models.ChatMessageTable).filter(models.ChatMessageTable.sender_id == ai_id).count()
+    like = is_ai_liked_by_user(db=db, user_address=user_address, ai_id=ai_id)
+    daily_user_access = db.query(models.ChatTable).filter(models.ChatTable.ai_id == ai_id, models.ChatTable.daily_user_access == True).count()
+    creator = db.query(models.UserTable).filter(models.UserTable.user_address == ai_table.creator_address).first().nickname
 
     total_prompt_token_usage = db.query(func.sum(models.ChatMessageTable.prompt_tokens))\
         .join(models.ChatTable, models.ChatMessageTable.chat_id == models.ChatTable.id)\
@@ -51,10 +55,13 @@ def get_ai_by_id(db: Session, ai_id: str) -> ai_schemas.AIRead:
     ai_read = ai_schemas.AIRead(
         **ai.model_dump(),
         rags=rags,
-        chats=chats,
+        chat_count=chat_count,
+        creator = creator,
         total_prompt_token_usage=total_prompt_token_usage,
         total_completion_token_usage=total_completion_token_usage,
-        total_token_usage=total_token_usage
+        total_token_usage=total_token_usage,
+        daily_user_access=daily_user_access,  # Replace with actual logic if needed
+        like=like
     )
     
     return ai_read
@@ -76,7 +83,7 @@ def get_ais_by_user(db: Session, user_address: str) -> ai_schemas.AIReadList:
 
     my_ai_list = []
     for ai in ais:
-        ai_read = get_ai_by_id(db=db, ai_id=ai.id)
+        ai_read = get_ai_by_id(db=db, ai_id=ai.id, user_address=user_address)
         my_ai_list.append(ai_read)
 
     return ai_schemas.AIReadList(ais=my_ai_list)
@@ -86,7 +93,7 @@ def get_today_ais(db: Session, user_address:str) -> ai_schemas.AIReadList:
 
     ai_list = []  # 결과를 담을 리스트
     for ai in ais:
-        ai_read = get_ai_by_id(db=db, ai_id=ai.id)
+        ai_read = get_ai_by_id(db=db, ai_id=ai.id, user_address=user_address)
         ai_list.append(ai_read)
 
     return ai_schemas.AIReadList(ais=ai_list) 
@@ -96,11 +103,11 @@ def search_ai_by_name(db: Session, name: str, user_address : str) -> ai_schemas.
 
     ai_list = []  # 결과를 담을 리스트
     for ai in ais:
-        ai_read = get_ai_by_id(db=db, ai_id=ai.id)
+        ai_read = get_ai_by_id(db=db, ai_id=ai.id, user_address=user_address)
         ai_list.append(ai_read)
 
     # 최종 결과로 AIOVerviewList 반환
-    return ai_schemas.AIReadList(ais=ai_list) 
+    return ai_schemas.AIReadList(ais=ai_list)
 
 def get_category_trend_users(db: Session, offset: int, limit : int, category:str, user_address):
     query = db.query(models.AITable)
@@ -114,7 +121,7 @@ def get_category_trend_users(db: Session, offset: int, limit : int, category:str
 
     ai_list = []  # 결과를 담을 리스트
     for ai in ais:
-        ai_read = get_ai_by_id(db=db, ai_id=ai.id)
+        ai_read = get_ai_by_id(db=db, ai_id=ai.id, user_address=user_address)
         ai_list.append(ai_read)
 
     # 최종 결과로 AIOVerviewList 반환
@@ -127,13 +134,12 @@ def get_ais_user_like(db: Session, user_address: str) -> ai_schemas.AIReadList:
     
     ais = []
     for like, ai in results:
-        ai_read = get_ai_by_id(db=db, ai_id=ai.id)
+        ai_read = get_ai_by_id(db=db, ai_id=ai.id, user_address=user_address)
         ais.append(ai_read)
     return ai_schemas.AIReadList(ais=ais)
 
 def update_ai(db: Session, ai_update: ai_schemas.AIUpdate) -> ai_schemas.AIRead:
     db.query(models.AITable).filter(models.AITable.id == ai_update.id).update({
-    models.AITable.name: ai_update.name,
     models.AITable.profile_image_url: ai_update.profile_image_url,
     models.AITable.category: ai_update.category,
     models.AITable.introductions: ai_update.introductions,

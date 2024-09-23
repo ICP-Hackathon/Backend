@@ -14,7 +14,7 @@ def is_ai_liked_by_user(db: Session, user_address: str, ai_id: str) -> bool:
     ).first() is not None
 
 def create_user_like_ai(db: Session, user_address: str, ai_id: str):
-    db_like = models.LikeTable(user_address=user_address, ai_id=ai_id)
+    db_like = models.LikeTable(user_address=user_address, ai_id=ai_id, like=True)
     db.add(db_like)
     db.commit()
     db.refresh(db_like)

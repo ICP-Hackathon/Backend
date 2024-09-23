@@ -78,18 +78,18 @@ def create_ai(ai: ai_schemas.AICreate, db: Session = Depends(utils.get_db)):
     
     # AI 콘텐츠를 추가하는 로직
     faiss_id = ai.name + "tx" + str(random.random())
-    embed = crud.add_text([ai.rag_contents], [{"source" : ai_id}], [faiss_id])
-    print("embed", embed[0][0])
+    # embed = crud.add_text([ai.rag_contents], [{"source" : ai_id}], [faiss_id])
+    # print("embed", embed[0][0])
 
     # 블록체인에 ai 생성 
     # creator_address가 블록체인 address 형식이 아닐 때 HTTPExeption(status_code=400, detail="User address is not a blockchain address type")
-    suiapi.add_ai(ai_id=ai_id, creator_address=ai.creator_address)
+    # suiapi.add_ai(ai_id=ai_id, creator_address=ai.creator_address)
 
     # blob 저장
-    digest = suiapi.add_blob(ai=ai, ai_id=ai_id, embed=embed)
+    # digest = suiapi.add_blob(ai=ai, ai_id=ai_id, embed=embed)
 
     # RAG 테이블에 기록
-    rags.create_rag(db=db, ai_id=ai_id, comments=ai.rag_comments, tx_hash=digest, faiss_id=faiss_id)
+    rags.create_rag(db=db, ai_id=ai_id, comments=ai.rag_comments, tx_hash="digest", faiss_id=faiss_id)
     
     return ais.create_ai(db=db, ai_id=ai_id, ai=ai)
 
@@ -108,11 +108,11 @@ def update_ai(ai_update: ai_schemas.AIUpdate, db: Session = Depends(utils.get_db
         faiss_id = ai.name + "tx" + str(random.random())
         embed = crud.add_text([ai_update.rag_contents], [{"source" : ai_update.id}], [faiss_id])
 
-        digest = suiapi.add_blob(ai=ai, ai_id=ai_update.id, embed=embed)
+        # digest = suiapi.add_blob(ai=ai, ai_id=ai_update.id, embed=embed)
         if ai_update.rag_comments == None:
-          rags.create_rag(db=db, ai_id=ai_update.id, comments="", tx_hash=digest, faiss_id=faiss_id)
+          rags.create_rag(db=db, ai_id=ai_update.id, comments="", tx_hash="digest", faiss_id=faiss_id)
         else:
-          rags.create_rag(db=db, ai_id=ai_update.id, comments=ai_update.rag_comments, tx_hash=digest, faiss_id=faiss_id)
+          rags.create_rag(db=db, ai_id=ai_update.id, comments=ai_update.rag_comments, tx_hash="digest", faiss_id=faiss_id)
     
     return ais.update_ai(db=db, ai_update=ai_update)
 
@@ -129,8 +129,8 @@ def delete_ai(ai_delete : ai_schemas.AIDelete, db: Session = Depends(utils.get_d
     deleted_ai = ais.delete_ai(db=db, ai_id=ai.id)
 
     ai_rags = rags.get_rags_by_aiid(db=db, ai_id=ai.id)
-    ids = [i.faiss_id for i in ai_rags]
-    crud.delete_text(ids)
+    # ids = [i.faiss_id for i in ai_rags]
+    # crud.delete_text(ids)
     rags.delete_raglogs(db=db, ai_id=ai.id)
 
     if not deleted_ai:

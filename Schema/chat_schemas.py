@@ -9,6 +9,7 @@ class ChatCreate(BaseModel):
 
 class ChatRead(base_schemas.Chat):
     ai : base_schemas.AI
+    creator : str
 
 class ChatReadList(BaseModel):
     chats : List[ChatRead]
