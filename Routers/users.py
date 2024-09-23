@@ -34,9 +34,12 @@ def add_user(user: base_schemas.User, db: Session = Depends(utils.get_db)):
     check_user = users.check_user_exists(db=db, user_address=user.user_address)
     if check_user:
         raise HTTPException(status_code=400, detail="User Already Exists")
-    suiapi.add_user_creator_consumser(user.user_address)
+    # suiapi.add_user_creator_consumser(user.user_address)
     return users.add_user(db, user = user)
 
 @router.put("/", response_model=base_schemas.User)
 def update_user(user: base_schemas.User, db: Session = Depends(utils.get_db)):
+    check_user = users.check_user_exists(db=db, user_address=user.user_address)
+    if not check_user:
+        raise HTTPException(status_code=400, detail="User Doesn't Exists")
     return users.update_user(db, user_update = user)

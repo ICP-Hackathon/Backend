@@ -54,6 +54,7 @@ class Chat(BaseModel):
     id: str
     ai_id: str
     user_address: str
+    daily_user_access : bool
 
     class Config:
         from_attributes = True

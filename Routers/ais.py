@@ -129,8 +129,8 @@ def delete_ai(ai_delete : ai_schemas.AIDelete, db: Session = Depends(utils.get_d
     deleted_ai = ais.delete_ai(db=db, ai_id=ai.id)
 
     ai_rags = rags.get_rags_by_aiid(db=db, ai_id=ai.id)
-    ids = [i.faiss_id for i in ai_rags]
-    crud.delete_text(ids)
+    # ids = [i.faiss_id for i in ai_rags]
+    # crud.delete_text(ids)
     rags.delete_raglogs(db=db, ai_id=ai.id)
 
     if not deleted_ai:

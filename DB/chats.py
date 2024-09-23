@@ -17,9 +17,10 @@ def get_chat_by_id(db: Session, chat_id: str) -> base_schemas.Chat:
 
 def get_chats_by_user_address(db: Session, user_address: str):
     results = (
-        db.query(models.ChatTable, models.AITable)
+        db.query(models.ChatTable, models.AITable, models.UserTable)
         .join(models.AITable, models.ChatTable.ai_id == models.AITable.id)
         .filter(models.ChatTable.user_address == user_address)
+        .filter(models.AITable.creator_address == models.UserTable.user_address)
         .all()
     )
 
@@ -28,9 +29,11 @@ def get_chats_by_user_address(db: Session, user_address: str):
           id=chat.id,
           ai_id=chat.ai_id,
           user_address=chat.user_address,
-          ai=ai
+          daily_user_access = chat.daily_user_access,
+          ai=ai,
+          creator = user.nickname
         )
-        for chat, ai in results
+        for chat, ai, user in results
     ]
 
     return chat_schemas.ChatReadList(chats=chats)

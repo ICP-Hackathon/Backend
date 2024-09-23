@@ -15,12 +15,13 @@ class AICreate(BaseModel):
 
 class AIRead(base_schemas.AI):
     rags: List[base_schemas.RAG]
-    chats: List[base_schemas.Chat]
+    creator : str
+    chat_count : int
     total_prompt_token_usage: int
     total_completion_token_usage: int
     total_token_usage: int
-    # like 추가
-    # total_chat_counts_24h
+    daily_user_access : int
+    like : bool
 
 class AIReadList(BaseModel):
     ais : List[AIRead]
@@ -28,7 +29,6 @@ class AIReadList(BaseModel):
 class AIUpdate(BaseModel):
     id: str
     creator_address: str
-    name: Optional[str] = None
     profile_image_url: Optional[str] = None
     category: Optional[str] = None
     introductions: Optional[str] = None
