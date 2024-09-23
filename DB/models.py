@@ -6,56 +6,57 @@ class UserTable(Base):
     __tablename__ = "usertable"
 
     user_address = Column(String, nullable=False, primary_key=True)
-    image_url = Column(String, nullable=True)
-    nickname = Column(String, nullable=True)
-    gender = Column(String, nullable=True)
-    country = Column(String, nullable=True)
-    interest = Column(String, nullable=True)
+    nickname = Column(String, nullable=False)
+    gender = Column(String, nullable=False)
+    country = Column(String, nullable=False)
+    interest = Column(String, nullable=False)
+    profile_image_url = Column(String, nullable=False)
 
 class AITable(Base):
     __tablename__ = "aitable"
 
-    ai_id = Column(String, nullable=False, primary_key=True)
-    creator_address = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.now(), nullable=True)  # Use DateTime instead of String
-    ai_name = Column(String, nullable=True)
-    image_url = Column(String, nullable=True)
-    category = Column(String, nullable=True)
-    introductions = Column(String, nullable=True)
+    id = Column(String, nullable=False, primary_key=True)
+    creator_address = Column(String, nullable=False)
+    name = Column(String, nullable=False)
+    profile_image_url = Column(String, nullable=False)
+    category = Column(String, nullable=False)
+    introductions = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(), nullable=False)  # Use DateTime instead of String
 
 class RAGTable(Base):
     __tablename__ = "ragtable"
 
-    rag_id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     ai_id = Column(String, primary_key=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.now(), nullable=True)  # Use DateTime instead of String
-    comments = Column(Text, nullable=True)
-    tx_url = Column(String, nullable=True)
-    faiss_id = Column(String, nullable=True)
+    comments = Column(Text, nullable=False)
+    faiss_id = Column(String, nullable=False)
+    tx_hash = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.now(), nullable=False)  # Use DateTime instead of String
 
 class ChatTable(Base):
     __tablename__ = "chattable"
 
-    chat_id = Column(String, nullable=False, primary_key=True)
+    id = Column(String, nullable=False, primary_key=True)
     ai_id = Column(String, nullable=False)
     user_address = Column(String, nullable=False)
-    daily_user_access = Column(Boolean, nullable=True)
+    # daily_user_access = Column(Boolean, nullable=True)
 
 
-class ChatContentsTable(Base):
-    __tablename__ = "chatcontentstable"
+class ChatMessageTable(Base):
+    __tablename__ = "chatmessagetable"
 
-    chat_contents_id = Column(String, nullable=False, primary_key=True)
-    chat_id = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.now(), nullable=True)  # Use DateTime instead of String
-    sender_id = Column(String, nullable=True)
-    message = Column(Text, nullable=True)
-    prompt_tokens = Column(Float, nullable=True)
-    completion_tokens = Column(Float, nullable=True)
+    id = Column(String, nullable=False, primary_key=True)
+    chat_id = Column(String, nullable=False)
+    sender_id = Column(String, nullable=False)
+    message = Column(Text, nullable=False)
+    prompt_tokens = Column(Float, nullable=False)
+    completion_tokens = Column(Float, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(), nullable=False)  # Use DateTime instead of String
 
 class LikeTable(Base):
     __tablename__ = "liketable"
 
-    like_id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     user_address = Column(String, nullable=True)
     ai_id = Column(String, nullable=True)
+    like = Column(Boolean, nullable=False)
