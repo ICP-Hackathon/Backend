@@ -51,7 +51,7 @@ def create_chat(chat: chat_schemas.ChatCreate, db: Session = Depends(utils.get_d
         ai_id= chat.ai_id,
         daily_user_access=True
     )
-    chat_message_id = utils.create_chat_message_id(chat_id=chat_id)
+    chat_message_id = utils.create_ai_chat_message_id(chat_id=chat_id)
     chat_message = base_schemas.ChatMessage(
         id= chat_message_id,
         chat_id = chat_id,

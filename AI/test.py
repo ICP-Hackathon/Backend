@@ -3,19 +3,20 @@ from langchain_community.docstore.in_memory import InMemoryDocstore
 from langchain_openai import OpenAIEmbeddings
 from langchain_core.documents import Document
 from dotenv import load_dotenv
+import faiss
 
 
 load_dotenv()
 
 # 임베딩
 embeddings = OpenAIEmbeddings()
-
-db = FAISS.load_local(
-    folder_path="faiss_db",
-    index_name="faiss_index",
-    embeddings=embeddings,
-    allow_dangerous_deserialization=True,
+dimension_size = len(embeddings.embed_query("hello world"))
+print(dimension_size)
+db = FAISS(
+    embedding_function=OpenAIEmbeddings(),
+    index=faiss.IndexFlatL2(dimension_size),
+    docstore=InMemoryDocstore(),
+    index_to_docstore_id={},
 )
-res = db.similarity_search("What is Love", filter={'source': "User1_dating advice ai"})
-# print(db.docstore._dict)
-print(res)
+
+db.save_local(folder_path="faiss_db", index_name="faiss_index")
